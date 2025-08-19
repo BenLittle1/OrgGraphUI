@@ -22,13 +22,6 @@ export function SectionCards() {
       isProgress: true
     },
     { 
-      name: "Total Tasks", 
-      value: data.summary.totalTasks.toString(), 
-      icon: FileText, 
-      change: `${completionPercentage}% completed`,
-      color: completionPercentage > 50 ? "text-green-600" : "text-blue-600"
-    },
-    { 
       name: "High Priority", 
       value: data.summary.priorityCounts.high.toString(), 
       icon: AlertTriangle, 
