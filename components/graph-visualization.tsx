@@ -407,7 +407,7 @@ export default function GraphVisualization({
   return (
     <div 
       ref={containerRef}
-      className="w-full h-full min-h-[600px] relative overflow-hidden bg-gradient-to-br from-background via-muted/20 to-muted/40"
+      className="w-full h-full min-h-[600px] relative overflow-hidden bg-white dark:bg-gray-900"
     >
       <svg 
         ref={svgRef}
