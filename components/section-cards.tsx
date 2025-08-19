@@ -64,7 +64,7 @@ export function SectionCards() {
                 {stat.isHighPriority ? (
                   <>
                     <div className="text-2xl font-bold mb-2 text-red-600">{highPriorityPercentage}%</div>
-                    <Progress value={highPriorityPercentage} className="h-2 [&>div]:bg-red-500" />
+                    <Progress value={highPriorityPercentage} className="h-2 bg-red-100 [&>div]:bg-red-500" />
                     <p className="text-xs text-muted-foreground mt-2">
                       {highPriorityCompleted} of {highPriorityTasks.length} high priority completed
                     </p>
