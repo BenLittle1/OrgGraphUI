@@ -198,7 +198,7 @@ export default function GraphVisualization({
     svg.call(zoom)
     
     // Set initial zoom for overview - adjust scale based on screen size
-    const initialScale = isFullscreen ? 0.6 : 0.25
+    const initialScale = isFullscreen ? 0.3 : 0.25
     const initialTransform = d3.zoomIdentity
       .translate(w / 2, h / 2)
       .scale(initialScale)
