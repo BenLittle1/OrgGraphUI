@@ -12,6 +12,17 @@ export function SectionCards() {
     (data.summary.statusCounts.completed / data.summary.totalTasks) * 100
   )
 
+  // Calculate high priority task statistics
+  const highPriorityTasks = data.categories.flatMap(category => 
+    category.subcategories.flatMap(sub => 
+      sub.tasks.filter(task => task.priority === "high")
+    )
+  )
+  const highPriorityCompleted = highPriorityTasks.filter(task => task.status === "completed").length
+  const highPriorityPercentage = highPriorityTasks.length > 0 
+    ? Math.round((highPriorityCompleted / highPriorityTasks.length) * 100)
+    : 0
+
   const stats = [
     { 
       name: "Overall Progress", 
@@ -22,11 +33,13 @@ export function SectionCards() {
       isProgress: true
     },
     { 
-      name: "High Priority", 
+      name: "High Priority Progress", 
       value: data.summary.priorityCounts.high.toString(), 
       icon: AlertTriangle, 
       change: "needs immediate attention",
-      color: "text-red-600"
+      color: "text-red-600",
+      isProgress: true,
+      isHighPriority: true
     },
     { 
       name: "Categories", 
@@ -48,11 +61,23 @@ export function SectionCards() {
           <CardContent>
             {stat.isProgress ? (
               <>
-                <div className="text-2xl font-bold mb-2">{completionPercentage}%</div>
-                <Progress value={completionPercentage} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-2">
-                  {data.summary.statusCounts.completed} of {data.summary.totalTasks} completed
-                </p>
+                {stat.isHighPriority ? (
+                  <>
+                    <div className="text-2xl font-bold mb-2">{highPriorityPercentage}%</div>
+                    <Progress value={highPriorityPercentage} className="h-2" />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {highPriorityCompleted} of {highPriorityTasks.length} high priority completed
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold mb-2">{completionPercentage}%</div>
+                    <Progress value={completionPercentage} className="h-2" />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {data.summary.statusCounts.completed} of {data.summary.totalTasks} completed
+                    </p>
+                  </>
+                )}
               </>
             ) : (
               <>
