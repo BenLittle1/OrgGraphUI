@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { FileText, CheckCircle, Clock, AlertTriangle, TrendingUp } from "lucide-react"
 import { useData } from "@/contexts/data-context"
 
@@ -13,11 +14,12 @@ export function SectionCards() {
 
   const stats = [
     { 
-      name: "Completed", 
+      name: "Overall Progress", 
       value: data.summary.statusCounts.completed.toString(), 
       icon: CheckCircle, 
       change: `${data.summary.statusCounts.in_progress} in progress`,
-      color: "text-green-600"
+      color: "text-green-600",
+      isProgress: true
     },
     { 
       name: "Total Tasks", 
@@ -48,13 +50,25 @@ export function SectionCards() {
         <Card key={stat.name} className="transition-all hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{stat.name}</CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
+            {!stat.isProgress && <stat.icon className="h-4 w-4 text-muted-foreground" />}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className={stat.color}>{stat.change}</span>
-            </p>
+            {stat.isProgress ? (
+              <>
+                <div className="text-2xl font-bold mb-2">{completionPercentage}%</div>
+                <Progress value={completionPercentage} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-2">
+                  {data.summary.statusCounts.completed} of {data.summary.totalTasks} completed
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className={stat.color}>{stat.change}</span>
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       ))}
