@@ -35,6 +35,26 @@ export function ChecklistHeader({
     (data.summary.statusCounts.completed / data.summary.totalTasks) * 100
   )
 
+  // Calculate high priority task statistics
+  const highPriorityTasks = data.categories.flatMap(category => 
+    category.subcategories.flatMap(sub => 
+      sub.tasks.filter(task => task.priority === "high")
+    )
+  )
+  const highPriorityCompleted = highPriorityTasks.filter(task => task.status === "completed").length
+  const highPriorityPercentage = highPriorityTasks.length > 0 
+    ? Math.round((highPriorityCompleted / highPriorityTasks.length) * 100)
+    : 0
+
+  // Calculate category completion statistics
+  const completedCategories = data.categories.filter(category => {
+    const allTasks = category.subcategories.flatMap(sub => sub.tasks)
+    return allTasks.length > 0 && allTasks.every(task => task.status === "completed")
+  }).length
+  const categoryCompletionPercentage = data.categories.length > 0 
+    ? Math.round((completedCategories / data.categories.length) * 100)
+    : 0
+
   return (
     <div className="px-4 lg:px-6 space-y-6">
       {/* Summary Cards */}
@@ -54,24 +74,26 @@ export function ChecklistHeader({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Priority</CardTitle>
+            <CardTitle className="text-sm font-medium">High Priority Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{data.summary.priorityCounts.high}</div>
-            <p className="text-xs text-muted-foreground">
-              Critical tasks requiring attention
+            <div className="text-2xl font-bold mb-2 text-red-600">{highPriorityPercentage}%</div>
+            <Progress value={highPriorityPercentage} className="h-2 bg-red-100 [&>div]:bg-red-500" />
+            <p className="text-xs text-muted-foreground mt-2">
+              {highPriorityCompleted} of {highPriorityTasks.length} high priority completed
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categories</CardTitle>
+            <CardTitle className="text-sm font-medium">Business Categories</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.summary.totalCategories}</div>
-            <p className="text-xs text-muted-foreground">
-              Business process areas
+            <div className="text-2xl font-bold mb-2 text-blue-600">{categoryCompletionPercentage}%</div>
+            <Progress value={categoryCompletionPercentage} className="h-2 bg-blue-100 [&>div]:bg-blue-500" />
+            <p className="text-xs text-muted-foreground mt-2">
+              {completedCategories} of {data.categories.length} categories completed
             </p>
           </CardContent>
         </Card>
