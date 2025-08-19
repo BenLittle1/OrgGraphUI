@@ -22,10 +22,10 @@ export function AppSidebar() {
       <div className="flex h-full flex-col">
         <div className="flex h-14 items-center border-b px-4">
           <Link href="/" className="flex items-center space-x-2 text-lg font-semibold hover:text-primary transition-colors">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black dark:bg-primary text-white dark:text-primary-foreground">
               <Zap className="h-4 w-4" />
             </div>
-            <span>CodeAid</span>
+            <span className="text-black dark:text-foreground">CodeAid</span>
           </Link>
         </div>
         <nav className="flex-1 space-y-1 p-4">
@@ -38,7 +38,7 @@ export function AppSidebar() {
                 className={cn(
                   "flex items-center space-x-2 rounded-md px-2 py-2 text-sm font-medium transition-colors",
                   isActive 
-                    ? "bg-primary text-primary-foreground" 
+                    ? "bg-black text-white dark:bg-primary dark:text-primary-foreground" 
                     : "hover:bg-accent hover:text-accent-foreground"
                 )}
               >
