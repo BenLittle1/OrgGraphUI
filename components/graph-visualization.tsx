@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { Maximize, Minimize } from 'lucide-react'
 import * as d3 from 'd3'
 import { GraphData, GraphNode, GraphLink, getCompletionColor, getNodeRadius, getCollisionRadius } from '@/lib/graph-data'
 
@@ -22,6 +23,7 @@ export default function GraphVisualization({
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphLink> | null>(null)
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
   const [dimensions, setDimensions] = useState({ width, height })
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   // Update dimensions on resize
   useEffect(() => {
@@ -38,6 +40,33 @@ export default function GraphVisualization({
     updateDimensions()
     window.addEventListener('resize', updateDimensions)
     return () => window.removeEventListener('resize', updateDimensions)
+  }, [])
+
+  // Fullscreen functionality
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return
+
+    if (!isFullscreen) {
+      // Enter fullscreen
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen()
+      }
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+    }
+  }, [isFullscreen])
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
   }, [])
 
   // Process data to avoid mutations
@@ -57,16 +86,9 @@ export default function GraphVisualization({
       .selectAll('.graph-tooltip')
       .data([null])
       .join('div')
-      .attr('class', 'graph-tooltip')
-      .style('position', 'absolute')
-      .style('background', 'rgba(0, 0, 0, 0.9)')
-      .style('color', 'white')
-      .style('padding', '8px 12px')
-      .style('border-radius', '4px')
-      .style('font-size', '12px')
-      .style('pointer-events', 'none')
-      .style('z-index', '1000')
-      .style('opacity', 0)
+      .attr('class', 'graph-tooltip fixed z-50 rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md pointer-events-none opacity-0')
+      .style('left', (event.pageX + 10) + 'px')
+      .style('top', (event.pageY - 10) + 'px')
       
     tooltip.html(`
       <div><strong>${d.name}</strong></div>
@@ -74,8 +96,6 @@ export default function GraphVisualization({
       <div>Completion: ${Math.round(d.completion * 100)}%</div>
       <div>Weight: ${d.weight.toFixed(1)}</div>
     `)
-    .style('left', (event.pageX + 10) + 'px')
-    .style('top', (event.pageY - 10) + 'px')
     .transition()
     .duration(200)
     .style('opacity', 1)
@@ -126,8 +146,8 @@ export default function GraphVisualization({
           .attr('font-weight', d.level <= 1 ? 'bold' : 'normal')
           .attr('text-anchor', 'middle')
           .attr('dy', radius + 18 + (i * fontSize * 1.1))
-          .attr('fill', '#000000')
-          .attr('stroke', '#ffffff')
+          .attr('fill', 'hsl(var(--foreground))')
+          .attr('stroke', 'hsl(var(--background))')
           .attr('stroke-width', '1')
           .attr('pointer-events', 'none')
           .style('paint-order', 'stroke fill')
@@ -151,7 +171,6 @@ export default function GraphVisualization({
     const svg = d3.select(svgRef.current)
       .attr('width', w)
       .attr('height', h)
-      .style('background', 'radial-gradient(circle, #f8fafc 0%, #f1f5f9 100%)')
 
     // Clear previous content
     svg.selectAll('*').remove()
@@ -182,16 +201,43 @@ export default function GraphVisualization({
       .force('link', d3.forceLink<GraphNode, GraphLink>(links)
         .id(d => d.id)
         .distance(d => {
-          // Dynamic distance based on hierarchy level - EXACT from guide
-          return 80 + ((d.source as GraphNode).level + (d.target as GraphNode).level) * 20
+          const source = d.source as GraphNode
+          const target = d.target as GraphNode
+          
+          // Tight clustering distances
+          if ((source.level === 1 && target.level === 2) || (source.level === 2 && target.level === 1)) {
+            return 65 // Category to subcategory - tight clustering
+          }
+          if ((source.level === 2 && target.level === 3) || (source.level === 3 && target.level === 2)) {
+            return 40 // Subcategory to task - tight clustering
+          }
+          
+          // Original distance calculation for root-to-category links
+          return 80 + (source.level + target.level) * 20
         })
-        .strength(0.8)
+        .strength(d => {
+          // Weaker link strength for root-to-category connections to allow better spreading
+          const source = d.source as GraphNode
+          const target = d.target as GraphNode
+          if ((source.level === 0 && target.level === 1) || (source.level === 1 && target.level === 0)) {
+            return 0.2 // Much weaker links from center to categories
+          }
+          return 0.8 // Normal strength for other links
+        })
       )
       .force('charge', d3.forceManyBody()
         .strength(d => {
-          // Stronger repulsion for important nodes - EXACT from guide
           const node = d as GraphNode
           const baseStrength = -400
+          
+          // Extremely strong repulsion for category nodes (level 1) to spread them around the radial constraint
+          if (node.level === 1) {
+            // All category nodes get extremely strong repulsion to spread out around the circle
+            const levelMultiplier = Math.max(1, 3 - node.level) // = 2 for level 1
+            return baseStrength * levelMultiplier * 30 // Extremely strong repulsion for maximum separation
+          }
+          
+          // Keep weight-based repulsion for other levels (subcategories and tasks)
           const levelMultiplier = Math.max(1, 3 - node.level)
           const weightMultiplier = Math.sqrt(node.weight)
           return baseStrength * levelMultiplier * weightMultiplier
@@ -205,6 +251,19 @@ export default function GraphVisualization({
           return Math.max(15, Math.sqrt(node.weight) * 6 + 4)
         })
         .strength(0.8)
+      )
+      .force('radial', d3.forceRadial(d => {
+          const node = d as GraphNode
+          // Apply radial force only to category nodes (level 1) to maintain consistent distance from center
+          if (node.level === 1) {
+            return 400 // Increased radius to position categories further from center
+          }
+          return 0 // No radial constraint for other levels
+        }, w / 2, h / 2)
+        .strength(d => {
+          const node = d as GraphNode
+          return node.level === 1 ? 1.5 : 0 // Balanced radial force - strong enough for equal distance, weak enough for repulsion
+        })
       )
       .alphaDecay(0.02)      // Faster settling - EXACT from guide
       .velocityDecay(0.4)    // Stability - EXACT from guide
@@ -238,7 +297,7 @@ export default function GraphVisualization({
     nodeSelection.append('circle')
       .attr('r', d => Math.max(12, Math.sqrt(d.weight) * 6))
       .attr('fill', d => getCompletionColor(d.completion))
-      .attr('stroke', '#fff')
+      .attr('stroke', 'hsl(var(--background))')
       .attr('stroke-width', 1.5)
       .attr('opacity', 0.9)
 
@@ -293,11 +352,11 @@ export default function GraphVisualization({
         
         // Visual selection feedback
         nodeSelection.selectAll('circle')
-          .attr('stroke', '#fff')
+          .attr('stroke', 'hsl(var(--background))')
           .attr('stroke-width', 1.5)
         
         d3.select(event.currentTarget).select('circle')
-          .attr('stroke', '#007acc')
+          .attr('stroke', 'hsl(var(--primary))')
           .attr('stroke-width', 3)
         
         setSelectedNode(d.id === selectedNode ? null : d.id)
@@ -312,7 +371,7 @@ export default function GraphVisualization({
       if (event.target === event.currentTarget) {
         setSelectedNode(null)
         nodeSelection.selectAll('circle')
-          .attr('stroke', '#fff')
+          .attr('stroke', 'hsl(var(--background))')
           .attr('stroke-width', 1.5)
       }
     })
@@ -348,8 +407,7 @@ export default function GraphVisualization({
   return (
     <div 
       ref={containerRef}
-      className="w-full h-full min-h-[600px] relative overflow-hidden"
-      style={{ background: 'radial-gradient(circle, #f8fafc 0%, #f1f5f9 100%)' }}
+      className="w-full h-full min-h-[600px] relative overflow-hidden bg-gradient-to-br from-background via-muted/20 to-muted/40"
     >
       <svg 
         ref={svgRef}
@@ -358,8 +416,8 @@ export default function GraphVisualization({
       />
       
       {/* Controls overlay */}
-      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-sm">
-        <div className="text-sm text-gray-600 space-y-1">
+      <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-sm border">
+        <div className="text-sm text-muted-foreground space-y-1">
           <div>• Drag nodes to reposition</div>
           <div>• Scroll to zoom in/out</div>
           <div>• Click nodes to select</div>
@@ -368,23 +426,36 @@ export default function GraphVisualization({
       </div>
 
       {/* Legend */}
-      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-sm">
-        <div className="text-sm font-medium mb-2">Completion Status</div>
+      <div className="absolute top-4 right-4 bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-sm border">
+        <div className="text-sm font-medium mb-2 text-foreground">Completion Status</div>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-red-500"></div>
-            <span className="text-sm text-gray-600">Not Started (0%)</span>
+            <div className="w-4 h-4 rounded-full bg-red-500 dark:bg-red-400"></div>
+            <span className="text-sm text-muted-foreground">Not Started (0%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-            <span className="text-sm text-gray-600">In Progress (50%)</span>
+            <div className="w-4 h-4 rounded-full bg-yellow-500 dark:bg-yellow-400"></div>
+            <span className="text-sm text-muted-foreground">In Progress (50%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-green-500"></div>
-            <span className="text-sm text-gray-600">Completed (100%)</span>
+            <div className="w-4 h-4 rounded-full bg-green-500 dark:bg-green-400"></div>
+            <span className="text-sm text-muted-foreground">Completed (100%)</span>
           </div>
         </div>
       </div>
+
+      {/* Fullscreen toggle button */}
+      <button
+        onClick={toggleFullscreen}
+        className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-sm border rounded-lg p-2 shadow-sm hover:bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+        title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+      >
+        {isFullscreen ? (
+          <Minimize className="h-5 w-5 text-foreground" />
+        ) : (
+          <Maximize className="h-5 w-5 text-foreground" />
+        )}
+      </button>
     </div>
   )
 }

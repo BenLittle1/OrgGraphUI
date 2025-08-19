@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Settings, Users, BarChart3, CheckSquare, Network } from "lucide-react"
+import { Home, Settings, Users, BarChart3, CheckSquare, Network, Zap } from "lucide-react"
 import { Sidebar } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -21,8 +21,11 @@ export function AppSidebar() {
     <Sidebar>
       <div className="flex h-full flex-col">
         <div className="flex h-14 items-center border-b px-4">
-          <Link href="/" className="text-lg font-semibold hover:text-primary">
-            CodeAid
+          <Link href="/" className="flex items-center space-x-2 text-lg font-semibold hover:text-primary transition-colors">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Zap className="h-4 w-4" />
+            </div>
+            <span>CodeAid</span>
           </Link>
         </div>
         <nav className="flex-1 space-y-1 p-4">

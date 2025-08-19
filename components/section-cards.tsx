@@ -13,18 +13,18 @@ export function SectionCards() {
 
   const stats = [
     { 
-      name: "Total Tasks", 
-      value: data.summary.totalTasks.toString(), 
-      icon: FileText, 
-      change: `${completionPercentage}% completed`,
-      color: completionPercentage > 50 ? "text-green-600" : "text-blue-600"
-    },
-    { 
       name: "Completed", 
       value: data.summary.statusCounts.completed.toString(), 
       icon: CheckCircle, 
       change: `${data.summary.statusCounts.in_progress} in progress`,
       color: "text-green-600"
+    },
+    { 
+      name: "Total Tasks", 
+      value: data.summary.totalTasks.toString(), 
+      icon: FileText, 
+      change: `${completionPercentage}% completed`,
+      color: completionPercentage > 50 ? "text-green-600" : "text-blue-600"
     },
     { 
       name: "High Priority", 

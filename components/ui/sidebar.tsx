@@ -20,7 +20,7 @@ const Sidebar = ({ className, children, ...props }: React.HTMLAttributes<HTMLDiv
   return (
     <div
       className={cn(
-        "flex h-full w-64 flex-col border-r border-border bg-sidebar",
+        "flex min-h-screen w-64 flex-col border-r border-border bg-sidebar",
         className
       )}
       {...props}

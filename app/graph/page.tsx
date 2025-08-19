@@ -5,10 +5,11 @@ import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import GraphVisualization from "@/components/graph-visualization"
 import { convertToGraphData, GraphNode } from "@/lib/graph-data"
-import data from "@/data.json"
+import { useData } from "@/contexts/data-context"
 import { useState } from "react"
 
 export default function GraphPage() {
+  const { data } = useData()
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
   
   // Transform business process data to graph format

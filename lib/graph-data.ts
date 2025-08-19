@@ -202,12 +202,21 @@ export function convertToGraphData(data: BusinessProcessData): GraphData {
 
 // Helper function to get completion color based on percentage
 export function getCompletionColor(percentage: number): string {
-  if (percentage === 0) return '#ef4444'; // Red for 0%
-  if (percentage === 1) return '#10b981'; // Green for 100%
+  // Check if we're in dark mode by looking at the computed background color
+  const isDarkMode = typeof window !== 'undefined' && 
+    getComputedStyle(document.documentElement).getPropertyValue('--background').includes('4.9%');
+
+  if (percentage === 0) {
+    return isDarkMode ? '#f87171' : '#ef4444'; // Brighter red in dark mode
+  }
+  if (percentage === 1) {
+    return isDarkMode ? '#4ade80' : '#10b981'; // Brighter green in dark mode
+  }
   
   // HSL gradient from red (0°) to green (120°) through yellow
   const hue = percentage * 120;
-  return `hsl(${hue}, 70%, 50%)`;
+  const lightness = isDarkMode ? 65 : 50; // Brighter in dark mode
+  return `hsl(${hue}, 70%, ${lightness}%)`;
 }
 
 // Helper function to calculate node radius

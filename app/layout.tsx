@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { DataProvider } from "@/contexts/data-context"
+import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
   title: "CodeAid Dashboard",
@@ -13,11 +14,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <DataProvider>
-          {children}
-        </DataProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <DataProvider>
+            {children}
+          </DataProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

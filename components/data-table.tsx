@@ -72,7 +72,7 @@ export function DataTable() {
         <CardContent>
           {highPriorityTasks.length === 0 ? (
             <div className="text-center py-12">
-              <CheckSquare className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <CheckSquare className="h-12 w-12 text-green-500 dark:text-green-400 mx-auto mb-4" />
               <p className="text-muted-foreground">No high priority tasks remaining!</p>
               <p className="text-sm text-muted-foreground">Great job on completing critical items.</p>
             </div>

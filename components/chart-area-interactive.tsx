@@ -42,11 +42,11 @@ export function ChartAreaInteractive() {
                     <h3 className="text-sm font-medium">{category.name}</h3>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3 text-green-600" />
+                        <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-400" />
                         {completedTasks.length} completed
                       </div>
                       <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-blue-600" />
+                        <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                         {inProgressTasks.length} in progress
                       </div>
                       <span>{allTasks.length} total</span>
@@ -68,13 +68,22 @@ export function ChartAreaInteractive() {
                     const subProgress = Math.round((subCompleted / sub.tasks.length) * 100)
                     
                     return (
-                      <div key={sub.id} className="flex items-center justify-between p-2 rounded bg-background/50">
-                        <span className="truncate pr-2 text-muted-foreground">{sub.name}</span>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs">{subCompleted}/{sub.tasks.length}</span>
-                          {subProgress === 100 && (
-                            <CheckCircle className="h-3 w-3 text-green-600" />
-                          )}
+                      <div key={sub.id} className="p-3 rounded bg-background/50 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="truncate pr-2 text-muted-foreground font-medium">{sub.name}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs font-semibold">{subCompleted}/{sub.tasks.length}</span>
+                            {subProgress === 100 && (
+                              <CheckCircle className="h-3 w-3 text-green-600" />
+                            )}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Progress</span>
+                            <span className="text-muted-foreground">{subProgress}%</span>
+                          </div>
+                          <Progress value={subProgress} className="h-1.5" />
                         </div>
                       </div>
                     )
