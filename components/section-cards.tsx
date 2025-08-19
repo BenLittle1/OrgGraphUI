@@ -23,6 +23,15 @@ export function SectionCards() {
     ? Math.round((highPriorityCompleted / highPriorityTasks.length) * 100)
     : 0
 
+  // Calculate category completion statistics
+  const completedCategories = data.categories.filter(category => {
+    const allTasks = category.subcategories.flatMap(sub => sub.tasks)
+    return allTasks.length > 0 && allTasks.every(task => task.status === "completed")
+  }).length
+  const categoryCompletionPercentage = data.categories.length > 0 
+    ? Math.round((completedCategories / data.categories.length) * 100)
+    : 0
+
   const stats = [
     { 
       name: "Overall Progress", 
@@ -42,11 +51,13 @@ export function SectionCards() {
       isHighPriority: true
     },
     { 
-      name: "Categories", 
+      name: "Business Categories", 
       value: data.summary.totalCategories.toString(), 
       icon: TrendingUp, 
       change: "business areas covered",
-      color: "text-blue-600"
+      color: "text-blue-600",
+      isProgress: true,
+      isCategoryProgress: true
     },
   ]
 
@@ -67,6 +78,14 @@ export function SectionCards() {
                     <Progress value={highPriorityPercentage} className="h-2 bg-red-100 [&>div]:bg-red-500" />
                     <p className="text-xs text-muted-foreground mt-2">
                       {highPriorityCompleted} of {highPriorityTasks.length} high priority completed
+                    </p>
+                  </>
+                ) : stat.isCategoryProgress ? (
+                  <>
+                    <div className="text-2xl font-bold mb-2 text-blue-600">{categoryCompletionPercentage}%</div>
+                    <Progress value={categoryCompletionPercentage} className="h-2 bg-blue-100 [&>div]:bg-blue-500" />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {completedCategories} of {data.categories.length} categories completed
                     </p>
                   </>
                 ) : (
