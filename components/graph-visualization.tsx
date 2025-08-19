@@ -59,15 +59,25 @@ export default function GraphVisualization({
     }
   }, [isFullscreen])
 
-  // Listen for fullscreen changes
+  // Listen for fullscreen changes and recenter graph
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
+      const wasFullscreen = isFullscreen
+      const nowFullscreen = !!document.fullscreenElement
+      setIsFullscreen(nowFullscreen)
+      
+      // If entering fullscreen, trigger recreation of visualization which will center properly
+      if (!wasFullscreen && nowFullscreen) {
+        setTimeout(() => {
+          // The createVisualization function will be called due to dimensions change
+          // and will properly center the root node
+        }, 100)
+      }
     }
 
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  }, [])
+  }, [isFullscreen])
 
   // Process data to avoid mutations
   const processedData = useCallback(() => {
@@ -187,8 +197,8 @@ export default function GraphVisualization({
     
     svg.call(zoom)
     
-    // Set initial zoom for overview - exact from guide
-    const initialScale = 0.25
+    // Set initial zoom for overview - adjust scale based on screen size
+    const initialScale = isFullscreen ? 0.6 : 0.25
     const initialTransform = d3.zoomIdentity
       .translate(w / 2, h / 2)
       .scale(initialScale)
