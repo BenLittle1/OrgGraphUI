@@ -11,9 +11,10 @@ import { CheckCircle, Clock, AlertTriangle } from "lucide-react"
 interface CategorySectionProps {
   category: Category
   updateTaskStatus: (taskId: number, newStatus: string) => void
+  assignTaskToMember: (taskId: number, memberId: string | null) => void
 }
 
-export function CategorySection({ category, updateTaskStatus }: CategorySectionProps) {
+export function CategorySection({ category, updateTaskStatus, assignTaskToMember }: CategorySectionProps) {
   // Calculate category progress
   const allTasks = category.subcategories.flatMap(sub => sub.tasks)
   const completedTasks = allTasks.filter(task => task.status === "completed")
@@ -87,6 +88,7 @@ export function CategorySection({ category, updateTaskStatus }: CategorySectionP
                         key={task.id}
                         task={task}
                         updateTaskStatus={updateTaskStatus}
+                        assignTaskToMember={assignTaskToMember}
                       />
                     ))}
                   </div>

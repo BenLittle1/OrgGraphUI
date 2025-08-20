@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react"
 import initialData from "@/data.json"
+import { teamData, taskAssignments, TeamMember, TeamData } from "@/data/team-data"
 
 export interface Task {
   id: number
@@ -45,6 +46,7 @@ export interface ChecklistData {
 
 interface DataContextType {
   data: ChecklistData
+  teamData: TeamData
   updateTaskStatus: (taskId: number, newStatus: string) => void
   updateTaskAssignee: (taskId: number, assignee: string | null) => void
   updateTaskPriority: (taskId: number, priority: string) => void
@@ -53,12 +55,47 @@ interface DataContextType {
   getHighPriorityTasks: (limit?: number) => Array<Task & { category: string; subcategory: string }>
   resetAllTasks: () => void
   markCategoryComplete: (categoryId: number) => void
+  getTeamMemberById: (memberId: string) => TeamMember | null
+  getTasksForMember: (memberId: string) => Array<Task & { category: string; subcategory: string }>
+  getMemberProgress: (memberId: string) => { completed: number; inProgress: number; total: number; percentage: number; pending: number }
+  assignTaskToMember: (taskId: number, memberId: string | null) => void
+  getTeamMembers: () => TeamMember[]
+  getActiveMemberCount: () => number
+  getMembersByDepartment: (department: string) => TeamMember[]
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [data, setData] = useState<ChecklistData>(initialData as ChecklistData)
+  // Initialize data with task assignments from team data
+  const initializeDataWithAssignments = (): ChecklistData => {
+    const baseData = initialData as ChecklistData
+    const dataWithAssignments = {
+      ...baseData,
+      categories: baseData.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task => {
+            // Find which team member this task is assigned to
+            const assignedMember = Object.entries(taskAssignments).find(
+              ([memberId, taskIds]) => taskIds.includes(task.id)
+            )
+            const memberName = assignedMember ? 
+              teamData.members.find(m => m.id === assignedMember[0])?.name || null : null
+            
+            return {
+              ...task,
+              assignee: memberName
+            }
+          })
+        }))
+      }))
+    }
+    return dataWithAssignments
+  }
+  
+  const [data, setData] = useState<ChecklistData>(initializeDataWithAssignments())
 
   // Calculate summary statistics
   const recalculateSummary = useCallback((categories: Category[]): ChecklistData['summary'] => {
@@ -209,8 +246,73 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     })
   }, [recalculateSummary])
 
+  // Team member management functions
+  const getTeamMemberById = useCallback((memberId: string): TeamMember | null => {
+    return teamData.members.find(member => member.id === memberId) || null
+  }, [])
+
+  const getTasksForMember = useCallback((memberId: string) => {
+    const member = getTeamMemberById(memberId)
+    if (!member) return []
+
+    const memberTasks: Array<Task & { category: string; subcategory: string }> = []
+    
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        for (const task of subcategory.tasks) {
+          if (task.assignee === member.name) {
+            memberTasks.push({
+              ...task,
+              category: category.name,
+              subcategory: subcategory.name
+            })
+          }
+        }
+      }
+    }
+    
+    return memberTasks
+  }, [data.categories, getTeamMemberById])
+
+  const getMemberProgress = useCallback((memberId: string) => {
+    const memberTasks = getTasksForMember(memberId)
+    const completed = memberTasks.filter(task => task.status === "completed").length
+    const inProgress = memberTasks.filter(task => task.status === "in_progress").length
+    const total = memberTasks.length
+    
+    // Calculate weighted progress: completed = 1.0, in_progress = 0.5, pending = 0.0
+    const weightedProgress = completed + (inProgress * 0.5)
+    const percentage = total > 0 ? Math.round((weightedProgress / total) * 100) : 0
+    
+    return { 
+      completed, 
+      inProgress,
+      total, 
+      percentage,
+      pending: total - completed - inProgress
+    }
+  }, [getTasksForMember])
+
+  const assignTaskToMember = useCallback((taskId: number, memberId: string | null) => {
+    const memberName = memberId ? getTeamMemberById(memberId)?.name || null : null
+    updateTaskAssignee(taskId, memberName)
+  }, [getTeamMemberById, updateTaskAssignee])
+
+  const getTeamMembers = useCallback((): TeamMember[] => {
+    return teamData.members
+  }, [])
+
+  const getActiveMemberCount = useCallback((): number => {
+    return teamData.members.filter(member => member.isActive).length
+  }, [])
+
+  const getMembersByDepartment = useCallback((department: string): TeamMember[] => {
+    return teamData.members.filter(member => member.department === department)
+  }, [])
+
   const value: DataContextType = useMemo(() => ({
     data,
+    teamData,
     updateTaskStatus,
     updateTaskAssignee,
     updateTaskPriority,
@@ -218,7 +320,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     getCategoryProgress,
     getHighPriorityTasks,
     resetAllTasks,
-    markCategoryComplete
+    markCategoryComplete,
+    getTeamMemberById,
+    getTasksForMember,
+    getMemberProgress,
+    assignTaskToMember,
+    getTeamMembers,
+    getActiveMemberCount,
+    getMembersByDepartment
   }), [
     data,
     updateTaskStatus,
@@ -228,7 +337,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     getCategoryProgress,
     getHighPriorityTasks,
     resetAllTasks,
-    markCategoryComplete
+    markCategoryComplete,
+    getTeamMemberById,
+    getTasksForMember,
+    getMemberProgress,
+    assignTaskToMember,
+    getTeamMembers,
+    getActiveMemberCount,
+    getMembersByDepartment
   ])
 
   return (

@@ -9,7 +9,7 @@ import { CategorySection } from "@/components/category-section"
 import { useData, type Category, type Subcategory } from "@/contexts/data-context"
 
 export default function ChecklistPage() {
-  const { data, updateTaskStatus } = useData()
+  const { data, updateTaskStatus, assignTaskToMember } = useData()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
@@ -61,6 +61,7 @@ export default function ChecklistPage() {
                     key={category.id}
                     category={category}
                     updateTaskStatus={updateTaskStatus}
+                    assignTaskToMember={assignTaskToMember}
                   />
                 ))}
                 {filteredCategories.length === 0 && (

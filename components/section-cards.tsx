@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { FileText, CheckCircle, Clock, AlertTriangle, TrendingUp } from "lucide-react"
+import { FileText, CheckCircle, Clock, AlertTriangle, TrendingUp, Activity } from "lucide-react"
 import { useData } from "@/contexts/data-context"
 
 export function SectionCards() {
@@ -59,10 +59,18 @@ export function SectionCards() {
       isProgress: true,
       isCategoryProgress: true
     },
+    { 
+      name: "Active Tasks", 
+      value: data.summary.statusCounts.in_progress.toString(), 
+      icon: Activity, 
+      change: "currently in progress",
+      color: "text-blue-600",
+      isProgress: false
+    },
   ]
 
   return (
-    <div className="grid gap-4 px-4 md:grid-cols-2 lg:grid-cols-3 lg:px-6">
+    <div className="grid gap-4 px-4 md:grid-cols-2 lg:grid-cols-4 lg:px-6">
       {stats.map((stat) => (
         <Card key={stat.name} className="transition-all hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

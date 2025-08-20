@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { AssigneeSelect } from "@/components/assignee-select"
 import { Task } from "@/contexts/data-context"
 import { User, MoreHorizontal, Edit } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -13,9 +14,10 @@ import { cn } from "@/lib/utils"
 interface TaskItemProps {
   task: Task
   updateTaskStatus: (taskId: number, newStatus: string) => void
+  assignTaskToMember: (taskId: number, memberId: string | null) => void
 }
 
-export function TaskItem({ task, updateTaskStatus }: TaskItemProps) {
+export function TaskItem({ task, updateTaskStatus, assignTaskToMember }: TaskItemProps) {
   const [showDetails, setShowDetails] = useState(false)
 
   const handleStatusChange = (checked: boolean) => {
@@ -88,12 +90,11 @@ export function TaskItem({ task, updateTaskStatus }: TaskItemProps) {
           </Badge>
           
           {/* Assignee */}
-          {task.assignee && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <User className="h-3 w-3" />
-              {task.assignee}
-            </div>
-          )}
+          <AssigneeSelect
+            taskId={task.id}
+            currentAssignee={task.assignee}
+            assignTaskToMember={assignTaskToMember}
+          />
         </div>
       </div>
 
@@ -168,7 +169,13 @@ export function TaskItem({ task, updateTaskStatus }: TaskItemProps) {
               
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Assignee</label>
-                <p className="mt-1 text-sm">{task.assignee || "Unassigned"}</p>
+                <div className="mt-1">
+                  <AssigneeSelect
+                    taskId={task.id}
+                    currentAssignee={task.assignee}
+                    assignTaskToMember={assignTaskToMember}
+                  />
+                </div>
               </div>
               
               <div>

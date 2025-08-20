@@ -58,7 +58,7 @@ export function ChecklistHeader({
   return (
     <div className="px-4 lg:px-6 space-y-6">
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Overall Progress</CardTitle>
@@ -94,6 +94,18 @@ export function ChecklistHeader({
             <Progress value={categoryCompletionPercentage} className="h-2 bg-blue-100 [&>div]:bg-blue-500" />
             <p className="text-xs text-muted-foreground mt-2">
               {completedCategories} of {data.categories.length} categories completed
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold mb-2 text-blue-600">{data.summary.statusCounts.in_progress}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              tasks currently in progress
             </p>
           </CardContent>
         </Card>

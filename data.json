@@ -9,8 +9,8 @@
           "id": 1,
           "name": "Business Formation & Legal",
           "tasks": [
-            {"id": 1, "name": "Business Plan Creation", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 2, "name": "Legal Structure", "status": "pending", "priority": "high", "assignee": null},
+            {"id": 1, "name": "Business Plan Creation", "status": "completed", "priority": "high", "assignee": null},
+            {"id": 2, "name": "Legal Structure", "status": "completed", "priority": "high", "assignee": null},
             {"id": 3, "name": "Name Registration", "status": "pending", "priority": "high", "assignee": null},
             {"id": 4, "name": "Trademark", "status": "pending", "priority": "medium", "assignee": null},
             {"id": 5, "name": "Articles of Incorporation", "status": "pending", "priority": "high", "assignee": null},
@@ -60,9 +60,9 @@
           "id": 5,
           "name": "Financial Setup",
           "tasks": [
-            {"id": 21, "name": "Business Bank Account", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 22, "name": "Business Credit Cards", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 23, "name": "Accounting Software Setup", "status": "pending", "priority": "high", "assignee": null},
+            {"id": 21, "name": "Business Bank Account", "status": "completed", "priority": "high", "assignee": null},
+            {"id": 22, "name": "Business Credit Cards", "status": "completed", "priority": "medium", "assignee": null},
+            {"id": 23, "name": "Accounting Software Setup", "status": "in_progress", "priority": "high", "assignee": null},
             {"id": 24, "name": "Chart of Accounts Setup", "status": "pending", "priority": "high", "assignee": null},
             {"id": 25, "name": "Expense Management System", "status": "pending", "priority": "medium", "assignee": null}
           ]
@@ -135,10 +135,10 @@
           "id": 11,
           "name": "Technology & Development",
           "tasks": [
-            {"id": 46, "name": "Front-End Tech Stack", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 47, "name": "Back-End Tech Stack", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 48, "name": "Open Source Software & Dependency List", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 49, "name": "Development Process", "status": "pending", "priority": "high", "assignee": null},
+            {"id": 46, "name": "Front-End Tech Stack", "status": "completed", "priority": "high", "assignee": null},
+            {"id": 47, "name": "Back-End Tech Stack", "status": "in_progress", "priority": "high", "assignee": null},
+            {"id": 48, "name": "Open Source Software & Dependency List", "status": "in_progress", "priority": "medium", "assignee": null},
+            {"id": 49, "name": "Development Process", "status": "in_progress", "priority": "high", "assignee": null},
             {"id": 50, "name": "Quality Assurance", "status": "pending", "priority": "high", "assignee": null}
           ]
         },
@@ -174,11 +174,11 @@
           "id": 14,
           "name": "Marketing Strategy",
           "tasks": [
-            {"id": 60, "name": "Name", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 61, "name": "Logo", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 62, "name": "Mission", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 63, "name": "Vision", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 64, "name": "Positioning", "status": "pending", "priority": "high", "assignee": null},
+            {"id": 60, "name": "Name", "status": "completed", "priority": "high", "assignee": null},
+            {"id": 61, "name": "Logo", "status": "completed", "priority": "high", "assignee": null},
+            {"id": 62, "name": "Mission", "status": "completed", "priority": "high", "assignee": null},
+            {"id": 63, "name": "Vision", "status": "in_progress", "priority": "high", "assignee": null},
+            {"id": 64, "name": "Positioning", "status": "in_progress", "priority": "high", "assignee": null},
             {"id": 65, "name": "Target Market (ICP)", "status": "pending", "priority": "high", "assignee": null},
             {"id": 66, "name": "Competitive Analysis", "status": "pending", "priority": "medium", "assignee": null},
             {"id": 67, "name": "Marketing Plan", "status": "pending", "priority": "high", "assignee": null},
@@ -268,9 +268,9 @@
     "totalCategories": 7,
     "totalSubcategories": 20,
     "statusCounts": {
-      "pending": 93,
-      "in_progress": 0,
-      "completed": 0
+      "pending": 79,
+      "in_progress": 6,
+      "completed": 8
     },
     "priorityCounts": {
       "high": 42,

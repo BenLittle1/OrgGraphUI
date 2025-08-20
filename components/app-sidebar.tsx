@@ -7,11 +7,11 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: Home },
+  { name: "Overview", href: "/", icon: Home },
   { name: "Checklist", href: "/checklist", icon: CheckSquare },
   { name: "Graph", href: "/graph", icon: Network },
-  { name: "Team", href: "#", icon: Users },
-  { name: "Settings", href: "#", icon: Settings },
+  { name: "Team", href: "/team", icon: Users },
+  { name: "Settings", href: "/settings", icon: Settings },
 ]
 
 export function AppSidebar() {

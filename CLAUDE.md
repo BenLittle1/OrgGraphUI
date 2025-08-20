@@ -7,9 +7,10 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 CodeAid is a sophisticated business process checklist dashboard built with Next.js 14, TypeScript, and shadcn/ui components. The application displays 93 business processes across 7 categories in a unified dashboard with real-time statistics, interactive visualizations, and collaborative task management.
 
 **Core Features:**
-- **Dashboard**: Summary cards, interactive progress charts, high-priority task table
-- **Checklist**: Filterable task management with real-time status updates
+- **Overview**: Summary cards, interactive progress charts, high-priority task table
+- **Checklist**: Filterable task management with real-time status updates and task assignment
 - **Graph**: D3.js force-directed visualization with detailed node inspection
+- **Team**: Comprehensive team member management with progress tracking
 - **Unified State**: Cross-view reactivity with instant data synchronization
 - **Theme Support**: Persistent light/dark mode with comprehensive design tokens
 
@@ -41,11 +42,12 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 ```
 /Users/benlittle/Desktop/Stuff/Projects/AXL/OrgGraphUI/
 ├── app/                          # Next.js 14 app directory
-│   ├── checklist/page.tsx       # Checklist view with filters
+│   ├── checklist/page.tsx       # Checklist view with filters and task assignment
 │   ├── graph/page.tsx           # Interactive graph visualization
+│   ├── team/page.tsx            # Team member management and progress tracking
 │   ├── globals.css              # CSS variables, theme tokens
 │   ├── layout.tsx               # Root layout with DataProvider
-│   └── page.tsx                 # Dashboard home page
+│   └── page.tsx                 # Overview/Dashboard home page
 ├── components/                   # React components
 │   ├── ui/                      # shadcn/ui base components
 │   │   ├── accordion.tsx        # Collapsible content sections
@@ -61,18 +63,23 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 │   │   ├── sidebar.tsx         # Navigation sidebar
 │   │   └── table.tsx           # Data tables
 │   ├── app-sidebar.tsx          # Navigation with active states
+│   ├── assignee-select.tsx      # Task assignment dropdown component
 │   ├── category-section.tsx     # Checklist category display
-│   ├── chart-area-interactive.tsx # Dashboard progress charts
-│   ├── checklist-header.tsx     # Filters and search controls
+│   ├── chart-area-interactive.tsx # Overview progress charts
+│   ├── checklist-header.tsx     # Filters, search controls, and summary cards
 │   ├── data-table.tsx           # High-priority tasks table
 │   ├── graph-visualization.tsx   # D3.js force-directed graph
 │   ├── mode-toggle.tsx          # Dark/light theme toggle
-│   ├── section-cards.tsx        # Dashboard summary statistics
+│   ├── section-cards.tsx        # Overview summary statistics
 │   ├── site-header.tsx          # Top navigation bar
-│   ├── task-item.tsx            # Individual task component
+│   ├── task-item.tsx            # Individual task component with assignment
+│   ├── team-member-card.tsx     # Team member display card
+│   ├── team-member-detail.tsx   # Team member detail modal
 │   └── theme-provider.tsx       # Theme context wrapper
 ├── contexts/
 │   └── data-context.tsx         # Unified reactive state management
+├── data/
+│   └── team-data.ts             # Team member data and task assignments
 ├── lib/
 │   ├── graph-data.ts            # D3 data transformation utilities
 │   └── utils.ts                 # Utility functions (cn helper)
@@ -106,18 +113,28 @@ npm run lint         # Run ESLint for code quality checks
 ## Data Architecture
 
 ### **Unified State Management**
-All views (Dashboard, Checklist, Graph) share a single reactive data source via `DataContext` (`contexts/data-context.tsx`).
+All views (Overview, Checklist, Graph, Team) share a single reactive data source via `DataContext` (`contexts/data-context.tsx`).
 
 **Data Flow Architecture:**
 1. **DataProvider** wraps the app in `app/layout.tsx`, providing reactive state management
 2. **All views use `useData()` hook** for consistent state access and updates
-3. **Cross-view reactivity**: Task status changes instantly update all views (dashboard statistics, checklist UI, graph node colors)
+3. **Cross-view reactivity**: Task status changes instantly update all views (overview statistics, checklist UI, graph node colors, team progress)
+4. **Team Integration**: Task assignments link business processes to team members with real-time progress tracking
 
 ### **Core Data Structure**
-The data originates from `data.json` - a hierarchical JSON containing:
+The application uses two main data sources:
+
+**Business Process Data** (`data.json`):
 - **Categories**: 7 main business areas (Corporate & Governance, Finance & Accounting, HR, Product/Tech, Go-To-Market, Sales/Customer Success, Fundraising)
 - **Subcategories**: 20 functional areas within categories
 - **Tasks**: 93 individual business process items with status, priority, and assignee fields
+- **Current Status**: 8 completed, 6 in_progress, 79 pending tasks
+
+**Team Data** (`data/team-data.ts`):
+- **Team Members**: 4 core team members (CEO, CTO, CFO, VP Marketing)
+- **Task Assignments**: Mapping of team members to specific task IDs
+- **Member Profiles**: Complete profiles with roles, departments, contact info, hire dates
+- **Progress Tracking**: Real-time calculation of individual member task completion
 
 ### **TypeScript Interfaces**
 
@@ -153,6 +170,22 @@ interface ChecklistData {
     priorityCounts: { high: number; medium: number; low: number }
   }
 }
+
+interface TeamMember {
+  id: string
+  name: string
+  email: string
+  role: string
+  department: string
+  hireDate: string
+  avatarUrl: string | null
+  isActive: boolean
+}
+
+interface TeamData {
+  members: TeamMember[]
+  departments: string[]
+}
 ```
 
 ### **Graph Data Types**
@@ -175,10 +208,13 @@ interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
 ```
 
 ### **Components Consuming Reactive Data**
-- `SectionCards`: Displays live summary statistics with real-time updates
+- `SectionCards`: Displays live summary statistics with real-time updates including active tasks count
 - `DataTable`: Shows filtered high-priority tasks with instant status changes
 - `ChartAreaInteractive`: Renders category progress with live completion percentages
 - `GraphVisualization`: Node colors update automatically based on task completion status
+- `TeamMemberCard`: Shows real-time progress tracking for individual team members
+- `AssigneeSelect`: Provides task assignment functionality with team member selection
+- `ChecklistHeader`: Displays summary cards including in-progress task tracking
 
 ## Graph Visualization System
 
@@ -244,9 +280,12 @@ The graph uses a sophisticated multi-force physics simulation for optimal node p
 - `SiteHeader`: Top navigation bar with theme toggle and user controls
 
 ### **Data Components**
-- `SectionCards`: Real-time summary statistics with trend indicators
+- `SectionCards`: Real-time summary statistics with trend indicators and active tasks tracking
 - `DataTable`: Sortable/filterable table with pagination and selection
 - `ChartAreaInteractive`: Interactive progress charts with drill-down capability
+- `TeamMemberCard`: Individual team member cards with progress visualization
+- `TeamMemberDetail`: Comprehensive modal with detailed member task breakdown
+- `AssigneeSelect`: Task assignment dropdown with avatar-based team member selection
 
 ### **UI Components** (Located in `/components/ui/`)
 All components follow shadcn/ui patterns with:
@@ -277,25 +316,33 @@ Uses comprehensive CSS variables defined in `app/globals.css`:
 - **Sidebar Behavior**: Collapsible on mobile, persistent on desktop
 - **Graph Scaling**: Dynamic sizing based on container dimensions
 
-## Task Management
+## Task Management & Team System
 
 ### **Business Process Data**
 - **Total Tasks**: 93 individual business process items
 - **Categories**: 7 main business areas
 - **Subcategories**: 20 functional areas
 - **Priority Distribution**: High (42 tasks), Medium (35), Low (16)
-- **Current Status**: All tasks initialized as "pending"
+- **Current Status**: 8 completed, 6 in_progress, 79 pending tasks
+
+### **Team Management**
+- **Team Size**: 4 core team members (CEO, CTO, CFO, VP Marketing)
+- **Task Assignment**: Dynamic assignment system with real-time progress tracking
+- **Progress Calculation**: Weighted progress (completed=1.0, in_progress=0.5, pending=0.0)
+- **Avatar System**: Consistent avatar display across all components with proper sizing
+- **Department Organization**: Members organized by Executive, Engineering, Finance, Marketing
 
 ### **Status Management**
 - **Status Options**: `pending`, `in_progress`, `completed`
 - **Priority Levels**: `high`, `medium`, `low`
-- **Assignee System**: Support for task assignment (nullable)
+- **Assignee System**: Full team member assignment with name-based mapping
 - **Unique IDs**: Task IDs are unique across all categories/subcategories
 
 ### **Real-time Updates**
-- **Cross-View Synchronization**: Status changes propagate instantly across Dashboard, Checklist, and Graph
+- **Cross-View Synchronization**: Status changes propagate instantly across Overview, Checklist, Graph, and Team views
 - **Automatic Calculations**: Summary statistics update live without manual refresh
-- **Visual Feedback**: Immediate color changes in graph nodes and dashboard cards
+- **Visual Feedback**: Immediate color changes in graph nodes, dashboard cards, and team progress
+- **Assignment Tracking**: Task assignments instantly reflect in team member progress calculations
 
 ## Import Paths & Code Organization
 
@@ -312,26 +359,36 @@ import { useData } from "@/contexts/data-context"
 ### **Data Access Pattern**
 Components access reactive data via the `useData()` hook:
 ```typescript
-const { data, updateTaskStatus, getTaskById } = useData()
+const { 
+  data, 
+  teamData,
+  updateTaskStatus, 
+  assignTaskToMember,
+  getTaskById,
+  getMemberProgress,
+  getTasksForMember 
+} = useData()
 ```
 
 ### **Component Organization**
 - **UI Components**: Reusable, design system components in `/components/ui/`
 - **Feature Components**: Business logic components in `/components/`
 - **Context Providers**: State management in `/contexts/`
+- **Data Sources**: Static data and team information in `/data/`
 - **Utilities**: Helper functions in `/lib/`
 
 ## Architecture Patterns
 
 ### **Context Provider Pattern**
-- **Centralized State**: Single source of truth for all application data
+- **Centralized State**: Single source of truth for all application data and team management
 - **Provider Wrapper**: DataProvider wraps entire app in `layout.tsx`
 - **Hook Abstraction**: Custom `useData()` hook simplifies component data access
+- **Memoized Context**: Provider value is properly memoized to prevent cascade re-renders
 
 ### **Server/Client Separation**
-- **Static Data**: Business process data served from static JSON
+- **Static Data**: Business process data served from static JSON and team data from TypeScript modules
 - **Client-Side Only**: No server-side API routes or database connections
-- **Pure Frontend**: All state management and interactions happen client-side
+- **Pure Frontend**: All state management, task assignment, and team interactions happen client-side
 
 ### **Component Composition**
 - **Compound Components**: Complex UI built from smaller, focused components
@@ -422,6 +479,8 @@ const { data, updateTaskStatus, getTaskById } = useData()
 - **Advanced Filtering**: Complex query builder for task management
 - **Export Functionality**: PDF/Excel export of reports and progress
 - **Notifications**: Push notifications for task assignments and deadlines
+- **Team Expansion**: Support for larger teams and department hierarchies
+- **Role-Based Permissions**: Advanced access control and task visibility
 
 ### **Technical Improvements**
 - **API Integration**: Backend API for data persistence and user management
@@ -429,13 +488,18 @@ const { data, updateTaskStatus, getTaskById } = useData()
 - **Advanced Analytics**: Detailed progress tracking and reporting
 - **Mobile App**: React Native version for mobile task management
 - **Enterprise Features**: SSO integration, audit logs, advanced permissions
+- **Database Integration**: Supabase or similar backend for persistent team and task data
+- **Real-time Sync**: Live collaboration features for team task management
 
 ## Data Synchronization
 
 **Real-time Cross-View Updates**: Task status changes propagate instantly across all views:
-- ✅ **Dashboard** ↔️ **Checklist** ↔️ **Graph**
+- ✅ **Overview** ↔️ **Checklist** ↔️ **Graph** ↔️ **Team**
 - Graph node colors change immediately when tasks are completed/updated in other views
-- Summary statistics update live across dashboard cards and graph header
+- Summary statistics update live across overview cards, checklist headers, and team progress
+- Team member progress updates automatically when tasks are assigned or status changes
+- Task assignments reflect immediately in all views with proper name mapping
+- Active Tasks card shows real-time count of in_progress tasks across overview and checklist
 - Unified state ensures data consistency without manual refresh
 - **PERFORMANCE OPTIMIZED (2025)**: Selective re-rendering and strategic memoization eliminate unnecessary recreations
 
