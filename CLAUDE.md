@@ -492,6 +492,9 @@ const {
 - **Date format errors**: Always use ISO 8601 format (YYYY-MM-DD) with date-fns parsing/formatting
 - **Popover positioning**: Use `align="start"` and `overflow-hidden p-0` for proper calendar display
 
+**Calendar View Issues:**
+- **Tailwind CSS Warning (Non-breaking)**: `[--cell-size:theme(spacing.18)]` generates build warning because `spacing.18` doesn't exist in Tailwind's default spacing scale. The spacing scale includes 0, 0.5, 1-16, 20, 24, etc., but not 18. Warning appears during build but doesn't affect functionality. To fix: use `spacing.16` (64px) or `spacing.20` (80px) instead of the non-existent `spacing.18` value.
+
 ### **Development Tips**
 - **Hot Reload Issues**: Restart dev server if TypeScript changes aren't reflected
 - **Build Failures**: Run `npm run lint` to catch common issues before build

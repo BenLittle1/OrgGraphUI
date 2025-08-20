@@ -130,7 +130,7 @@ export function CalendarView() {
   const teamMembers = useMemo(() => getTeamMembers(), [getTeamMembers])
   const uniqueAssignees = useMemo(() => {
     const allTasks = getUpcomingTasksByDueDate(1000)
-    const assignees = new Set(allTasks.map(t => t.assignee).filter(Boolean))
+    const assignees = new Set(allTasks.map(t => t.assignee).filter(Boolean) as string[])
     return Array.from(assignees).sort()
   }, [getUpcomingTasksByDueDate])
 

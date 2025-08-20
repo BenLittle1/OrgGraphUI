@@ -178,8 +178,9 @@ export function CalendarEvent({ task, compact = false, className }: CalendarEven
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Assignee</label>
                   <AssigneeSelect
+                    taskId={task.id}
                     currentAssignee={task.assignee}
-                    onAssigneeChange={(memberId) => assignTaskToMember(task.id, memberId)}
+                    assignTaskToMember={assignTaskToMember}
                   />
                 </div>
 
