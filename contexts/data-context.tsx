@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react"
+import { parseISO, isValid, differenceInDays } from "date-fns"
 import initialData from "@/data.json"
 import { teamData, taskAssignments, TeamMember, TeamData } from "@/data/team-data"
 
@@ -55,6 +56,7 @@ interface DataContextType {
   getTaskById: (taskId: number) => Task | null
   getCategoryProgress: (categoryId: number) => number
   getHighPriorityTasks: (limit?: number) => Array<Task & { category: string; subcategory: string }>
+  getUpcomingTasksByDueDate: (limit?: number) => Array<Task & { category: string; subcategory: string }>
   resetAllTasks: () => void
   markCategoryComplete: (categoryId: number) => void
   getTeamMemberById: (memberId: string) => TeamMember | null
@@ -86,10 +88,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             const memberName = assignedMember ? 
               teamData.members.find(m => m.id === assignedMember[0])?.name || null : null
             
+            // Add some sample due dates for demonstration
+            let sampleDueDate = null
+            if (task.id === 1) sampleDueDate = "2025-08-25" // Business Plan Creation
+            if (task.id === 3) sampleDueDate = "2025-08-22" // Name Registration  
+            if (task.id === 15) sampleDueDate = "2025-08-28" // Product Design
+            if (task.id === 22) sampleDueDate = "2025-08-30" // Technical Architecture
+            if (task.id === 35) sampleDueDate = "2025-08-20" // Due today
+            if (task.id === 42) sampleDueDate = "2025-08-18" // Overdue
+            if (task.id === 50) sampleDueDate = "2025-09-05" // Future task
+            if (task.id === 8) sampleDueDate = "2025-08-24" // Another task
+
             return {
               ...task,
               assignee: memberName,
-              dueDate: null
+              dueDate: sampleDueDate
             }
           })
         }))
@@ -239,6 +252,49 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return highPriorityTasks
   }, [data.categories])
 
+  const getUpcomingTasksByDueDate = useCallback((limit = 20) => {
+    const tasksWithDueDates: Array<Task & { category: string; subcategory: string; sortKey: number }> = []
+    
+    // Collect all tasks that have due dates
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        for (const task of subcategory.tasks) {
+          if (task.dueDate) {
+            try {
+              const parsedDate = parseISO(task.dueDate)
+              if (isValid(parsedDate)) {
+                const today = new Date()
+                today.setHours(0, 0, 0, 0)
+                const due = new Date(parsedDate)
+                due.setHours(0, 0, 0, 0)
+                
+                const daysUntilDue = differenceInDays(due, today)
+                
+                // Create sort key: overdue (-1000 + days), due today (0), future (positive days)
+                const sortKey = daysUntilDue < 0 ? -1000 + daysUntilDue : daysUntilDue
+                
+                tasksWithDueDates.push({
+                  ...task,
+                  category: category.name,
+                  subcategory: subcategory.name,
+                  sortKey
+                })
+              }
+            } catch {
+              // Skip tasks with invalid dates
+            }
+          }
+        }
+      }
+    }
+    
+    // Sort by due date: overdue first, then by chronological order
+    tasksWithDueDates.sort((a, b) => a.sortKey - b.sortKey)
+    
+    // Remove sortKey and limit results
+    return tasksWithDueDates.slice(0, limit).map(({ sortKey, ...task }) => task)
+  }, [data.categories])
+
   const resetAllTasks = useCallback(() => {
     setData(initialData as ChecklistData)
   }, [])
@@ -342,6 +398,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     getTaskById,
     getCategoryProgress,
     getHighPriorityTasks,
+    getUpcomingTasksByDueDate,
     resetAllTasks,
     markCategoryComplete,
     getTeamMemberById,
@@ -360,6 +417,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     getTaskById,
     getCategoryProgress,
     getHighPriorityTasks,
+    getUpcomingTasksByDueDate,
     resetAllTasks,
     markCategoryComplete,
     getTeamMemberById,

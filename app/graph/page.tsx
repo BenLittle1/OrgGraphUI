@@ -21,6 +21,10 @@ export default function GraphPage() {
     setSelectedNode(node)
   }, [])
 
+  const handleClearSelection = useCallback(() => {
+    setSelectedNode(null)
+  }, [])
+
   const getDueDateInfo = useCallback((dueDate: string | null) => {
     if (!dueDate) return null
     
@@ -78,7 +82,7 @@ export default function GraphPage() {
       <AppSidebar />
       <SidebarInset>
         <SiteHeader />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col h-[calc(100vh-3.5rem)]">
           <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
             {/* Page Header */}
             <div className="flex items-center justify-between">
@@ -107,91 +111,100 @@ export default function GraphPage() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex flex-1 gap-4">
-              {/* Graph Visualization */}
-              <div className="flex-1 rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div className="flex flex-1 relative min-h-0">
+              {/* Graph Visualization - Full Width */}
+              <div className="flex-1 rounded-lg border bg-card text-card-foreground shadow-sm min-h-0">
                 <GraphVisualization 
                   data={graphData}
                   onNodeClick={handleNodeClick}
+                  onClearSelection={handleClearSelection}
                 />
               </div>
 
-              {/* Side Panel for Selected Node Details */}
+              {/* Minimal Node Details Card - Bottom Left Corner */}
               {selectedNode && (
-                <div className="w-80 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-                  <div className="space-y-4">
-                    <div className="border-b pb-4">
-                      <h3 className="text-lg font-semibold">{selectedNode.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedNode.level === 0 && "Root Process"}
-                        {selectedNode.level === 1 && "Category"}
-                        {selectedNode.level === 2 && "Subcategory"}
-                        {selectedNode.level === 3 && "Task"}
-                      </p>
+                <div className="absolute bottom-4 left-4 w-72 rounded-lg border bg-card text-card-foreground shadow-lg p-4 z-50">
+                  <div className="space-y-3">
+                    {/* Header */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm truncate" title={selectedNode.name}>
+                          {selectedNode.name}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedNode.level === 0 && "Root Process"}
+                          {selectedNode.level === 1 && "Category"}
+                          {selectedNode.level === 2 && "Subcategory"}
+                          {selectedNode.level === 3 && "Task"}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => setSelectedNode(null)}
+                        className="ml-2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                        aria-label="Close"
+                      >
+                        ×
+                      </button>
                     </div>
 
-                    <div className="space-y-3">
+                    {/* Completion Progress */}
+                    <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Completion</span>
-                        <span className="text-sm font-semibold">
+                        <span className="text-xs font-medium">Progress</span>
+                        <span className="text-xs font-semibold">
                           {Math.round(selectedNode.completion * 100)}%
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-muted rounded-full h-1.5">
                         <div 
-                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                          className="bg-green-500 h-1.5 rounded-full transition-all duration-300"
                           style={{ width: `${selectedNode.completion * 100}%` }}
                         />
                       </div>
+                    </div>
 
+                    {/* Task Details */}
+                    {selectedNode.level === 3 && selectedNode.originalNode && (
+                      <div className="space-y-2">
+                        {/* Status and Priority Badges */}
+                        <div className="flex flex-wrap gap-1">
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            selectedNode.originalNode.status === 'completed' 
+                              ? 'bg-green-100 text-green-800'
+                              : selectedNode.originalNode.status === 'in_progress'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {selectedNode.originalNode.status.replace('_', ' ')}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            selectedNode.originalNode.priority === 'high'
+                              ? 'bg-red-100 text-red-800'
+                              : selectedNode.originalNode.priority === 'medium'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {selectedNode.originalNode.priority}
+                          </span>
+                        </div>
 
-                      {/* Task-specific details */}
-                      {selectedNode.level === 3 && selectedNode.originalNode && (
-                        <div className="space-y-2 pt-4 border-t">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Status</span>
-                            <span className={`text-sm px-2 py-1 rounded-full text-xs font-medium ${
-                              selectedNode.originalNode.status === 'completed' 
-                                ? 'bg-green-100 text-green-800'
-                                : selectedNode.originalNode.status === 'in_progress'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {selectedNode.originalNode.status.replace('_', ' ')}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Priority</span>
-                            <span className={`text-sm px-2 py-1 rounded-full text-xs font-medium ${
-                              selectedNode.originalNode.priority === 'high'
-                                ? 'bg-red-100 text-red-800'
-                                : selectedNode.originalNode.priority === 'medium'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {selectedNode.originalNode.priority}
-                            </span>
-                          </div>
-
+                        {/* Assignee and Due Date */}
+                        <div className="space-y-1">
                           {selectedNode.originalNode.assignee && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Assignee</span>
-                              <span className="text-sm">
-                                {selectedNode.originalNode.assignee}
-                              </span>
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground">Assignee:</span>
+                              <span className="font-medium">{selectedNode.originalNode.assignee}</span>
                             </div>
                           )}
-
                           {selectedNode.originalNode.dueDate && (() => {
                             const dueDateInfo = getDueDateInfo(selectedNode.originalNode.dueDate)
                             const IconComponent = dueDateInfo?.icon
                             return dueDateInfo ? (
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Due Date</span>
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className="text-muted-foreground">Due:</span>
                                 <div className="flex items-center gap-1">
                                   {IconComponent && <IconComponent className="h-3 w-3" />}
-                                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${dueDateInfo.bgColor} ${dueDateInfo.color}`}>
+                                  <span className={`px-2 py-0.5 rounded-full font-medium ${dueDateInfo.bgColor} ${dueDateInfo.color}`}>
                                     {dueDateInfo.text}
                                   </span>
                                 </div>
@@ -199,45 +212,20 @@ export default function GraphPage() {
                             ) : null
                           })()}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Category-specific details */}
-                      {selectedNode.level === 1 && selectedNode.originalNode && (
-                        <div className="space-y-2 pt-4 border-t">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Total Tasks</span>
-                            <span className="text-sm font-semibold">
-                              {selectedNode.originalNode.totalTasks}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Subcategories</span>
-                            <span className="text-sm font-semibold">
-                              {selectedNode.originalNode.subcategories.length}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Subcategory-specific details */}
-                      {selectedNode.level === 2 && selectedNode.originalNode && (
-                        <div className="space-y-2 pt-4 border-t">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Tasks</span>
-                            <span className="text-sm font-semibold">
-                              {selectedNode.originalNode.tasks.length}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <button 
-                      onClick={() => setSelectedNode(null)}
-                      className="w-full mt-4 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-                    >
-                      Close Details
-                    </button>
+                    {/* Category/Subcategory Stats */}
+                    {selectedNode.level === 1 && selectedNode.originalNode && (
+                      <div className="text-xs text-muted-foreground">
+                        {selectedNode.originalNode.totalTasks} tasks • {selectedNode.originalNode.subcategories.length} subcategories
+                      </div>
+                    )}
+                    {selectedNode.level === 2 && selectedNode.originalNode && (
+                      <div className="text-xs text-muted-foreground">
+                        {selectedNode.originalNode.tasks.length} tasks
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

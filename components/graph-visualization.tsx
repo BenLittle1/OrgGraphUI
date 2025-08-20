@@ -11,13 +11,15 @@ interface GraphVisualizationProps {
   height?: number
   data: GraphData
   onNodeClick?: (node: GraphNode) => void
+  onClearSelection?: () => void
 }
 
 export default function GraphVisualization({ 
   width = 800, 
   height = 600, 
   data,
-  onNodeClick 
+  onNodeClick,
+  onClearSelection 
 }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -95,15 +97,32 @@ export default function GraphVisualization({
 
   // Show tooltip
   const showTooltip = useCallback((event: MouseEvent, d: GraphNode) => {
-    const tooltip = d3.select('body')
-      .selectAll('.graph-tooltip')
+    // Determine the container for the tooltip
+    const isFullscreen = !!document.fullscreenElement
+    const tooltipContainer = isFullscreen ? d3.select(containerRef.current!) : d3.select('body')
+    
+    // Calculate position based on container type
+    let leftPos, topPos
+    if (isFullscreen && containerRef.current) {
+      // For fullscreen, use coordinates relative to the container
+      const containerRect = containerRef.current.getBoundingClientRect()
+      leftPos = (event.clientX - containerRect.left + 10) + 'px'
+      topPos = (event.clientY - containerRect.top - 10) + 'px'
+    } else {
+      // For normal mode, use page coordinates
+      leftPos = (event.pageX + 10) + 'px'
+      topPos = (event.pageY - 10) + 'px'
+    }
+    
+    const tooltip = tooltipContainer
+      .selectAll('.graph-tooltip' as any)
       .data([null])
       .join('div')
-      .attr('class', 'graph-tooltip fixed z-50 rounded-md border bg-popover px-4 py-3 text-sm text-popover-foreground shadow-md pointer-events-none opacity-0')
+      .attr('class', `graph-tooltip ${isFullscreen ? 'absolute' : 'fixed'} z-50 rounded-md border bg-popover px-4 py-3 text-sm text-popover-foreground shadow-md pointer-events-none opacity-0`)
       .style('min-width', '280px')
       .style('max-width', '320px')
-      .style('left', (event.pageX + 10) + 'px')
-      .style('top', (event.pageY - 10) + 'px')
+      .style('left', leftPos)
+      .style('top', topPos)
     
     // Helper function to get due date info
     const getDueDateInfo = (dueDate: string | null) => {
@@ -182,7 +201,8 @@ export default function GraphVisualization({
   }, [])
 
   const hideTooltip = useCallback(() => {
-    d3.select('.graph-tooltip')
+    // Remove tooltips from both body and fullscreen container
+    d3.selectAll('.graph-tooltip')
       .transition()
       .duration(200)
       .style('opacity', 0)
@@ -457,8 +477,16 @@ export default function GraphVisualization({
         setSelectedNode(newSelectedId)
         updateSelection(newSelectedId)
         
-        if (onNodeClick) {
-          onNodeClick(d)
+        if (newSelectedId) {
+          // Selecting a node
+          if (onNodeClick) {
+            onNodeClick(d)
+          }
+        } else {
+          // Deselecting a node
+          if (onClearSelection) {
+            onClearSelection()
+          }
         }
       })
 
@@ -468,6 +496,10 @@ export default function GraphVisualization({
         selectedNodeRef.current = null
         setSelectedNode(null)
         updateSelection(null)
+        
+        if (onClearSelection) {
+          onClearSelection()
+        }
       }
     })
 
@@ -501,7 +533,7 @@ export default function GraphVisualization({
       if (simulationRef.current) {
         simulationRef.current.stop()
       }
-      d3.select('.graph-tooltip').remove()
+      d3.selectAll('.graph-tooltip').remove()
     }
   }, [createVisualization])
 

@@ -472,6 +472,7 @@ const {
 - **Poor layout**: Increase simulation alpha or adjust force strengths
 - **Graph resets on interaction**: FIXED (2025) - Ensure `selectedNode` not in `createVisualization` dependencies
 - **Performance issues**: Check for memory leaks in D3 event listeners, verify context memoization
+- **Fullscreen node interaction issue**: KNOWN ISSUE (2025) - Node click events and popup details card do not work in fullscreen mode. Hover tooltips work correctly, but node selection and the bottom-left detail card fail to appear when nodes are clicked in fullscreen. Issue persists despite D3.js event handler verification and pointer event troubleshooting. Normal mode works perfectly.
 
 **State Management Issues:**
 - **Data not updating**: Ensure components use `useData()` hook instead of static imports
