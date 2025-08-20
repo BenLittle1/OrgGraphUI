@@ -296,10 +296,10 @@ The graph uses a sophisticated multi-force physics simulation for optimal node p
 - `DataTable`: Sortable/filterable table with pagination and selection
 - `ChartAreaInteractive`: Interactive progress charts with drill-down capability
 - `TeamMemberCard`: Individual team member cards with progress visualization
-- `TeamMemberDetail`: Comprehensive modal with detailed member task breakdown
+- `TeamMemberDetail`: Comprehensive modal with detailed member task breakdown, interactive task management, and full task editing capabilities
 - `AssigneeSelect`: Task assignment dropdown with avatar-based team member selection
 - `DatePicker`: Advanced due date picker with calendar dropdown, visual status indicators, and date validation
-- `TaskItem`: Complete task management interface with status, priority, assignment, and due date controls
+- `TaskItem`: Complete task management interface with checkbox completion, priority badges, status dropdowns, assignment controls, due date pickers, and three-dot detail menus
 
 ### **UI Components** (Located in `/components/ui/`)
 All components follow shadcn/ui patterns with:
@@ -345,6 +345,9 @@ Uses comprehensive CSS variables defined in `app/globals.css`:
 - **Progress Calculation**: Weighted progress (completed=1.0, in_progress=0.5, pending=0.0)
 - **Avatar System**: Consistent avatar display across all components with proper sizing
 - **Department Organization**: Members organized by Executive, Engineering, Finance, Marketing
+- **Interactive Team Cards**: Clickable team member cards that open detailed task management modals
+- **Team Task Management**: Full task editing capabilities within team member details including status changes, due date updates, and assignment modifications
+- **Consistent UI Patterns**: Team details view uses identical task interaction patterns as checklist view (checkboxes, status dropdowns, three-dot menus)
 
 ### **Status Management**
 - **Status Options**: `pending`, `in_progress`, `completed`
@@ -355,7 +358,7 @@ Uses comprehensive CSS variables defined in `app/globals.css`:
 ### **Due Date Management**
 - **Calendar Interface**: shadcn/ui v4 calendar with dropdown month/year navigation and optimized sizing (72px cells, 320px width)
 - **Visual Indicators**: Color-coded status display with overdue (red), due today (orange), due soon (yellow), and future (gray) styling
-- **Smart Date Picker**: ChevronDown icon, proper spacing, visual feedback for different due date states
+- **Smart Date Picker**: Calendar icon, ChevronDown icon, proper spacing, visual feedback for different due date states
 - **Date Format**: ISO 8601 format (YYYY-MM-DD) for backend compatibility
 - **Date Validation**: Restricts selection to reasonable date ranges (past year to 5 years future)
 - **Cross-View Integration**: Due dates display consistently across checklist, task dialogs, and data tables

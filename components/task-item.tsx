@@ -138,24 +138,21 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTas
 
       {/* Task Content */}
       <div className="flex-1 min-w-0">
-        <div className={cn(
-          "font-medium",
-          task.status === "completed" && "line-through text-muted-foreground"
-        )}>
-          {task.name}
-        </div>
-        
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex items-center gap-2">
+          <div className={cn(
+            "font-medium",
+            task.status === "completed" && "line-through text-muted-foreground"
+          )}>
+            {task.name}
+          </div>
+          
           {/* Priority Badge */}
           <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
             {task.priority}
           </Badge>
-          
-          {/* Status Badge */}
-          <Badge variant="outline" className={cn("text-xs", getStatusColor(task.status))}>
-            {task.status.replace("_", " ")}
-          </Badge>
-          
+        </div>
+        
+        <div className="flex items-center gap-2 mt-1">
           {/* Due Date Picker */}
           <DatePicker
             date={task.dueDate}

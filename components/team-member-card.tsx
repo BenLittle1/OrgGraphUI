@@ -67,8 +67,20 @@ export function TeamMemberCard({ member, onViewDetails }: TeamMemberCardProps) {
     })
   }
 
+  const handleCardClick = () => {
+    onViewDetails(member)
+  }
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click when button is clicked
+    onViewDetails(member)
+  }
+
   return (
-    <Card className="transition-all hover:shadow-lg hover:scale-[1.02] cursor-pointer group">
+    <Card 
+      className="transition-all hover:shadow-lg hover:scale-[1.02] cursor-pointer group"
+      onClick={handleCardClick}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
@@ -159,7 +171,7 @@ export function TeamMemberCard({ member, onViewDetails }: TeamMemberCardProps) {
           variant="outline" 
           size="sm" 
           className="w-full mt-4" 
-          onClick={() => onViewDetails(member)}
+          onClick={handleButtonClick}
         >
           View Details
         </Button>

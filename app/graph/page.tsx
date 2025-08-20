@@ -7,6 +7,8 @@ import GraphVisualization from "@/components/graph-visualization"
 import { convertToGraphData, GraphNode } from "@/lib/graph-data"
 import { useData } from "@/contexts/data-context"
 import { useState, useMemo, useCallback } from "react"
+import { format, isValid, parseISO, differenceInDays } from "date-fns"
+import { Calendar, Clock, AlertTriangle } from "lucide-react"
 
 export default function GraphPage() {
   const { data } = useData()
@@ -17,6 +19,58 @@ export default function GraphPage() {
   
   const handleNodeClick = useCallback((node: GraphNode) => {
     setSelectedNode(node)
+  }, [])
+
+  const getDueDateInfo = useCallback((dueDate: string | null) => {
+    if (!dueDate) return null
+    
+    try {
+      const parsedDate = parseISO(dueDate)
+      if (!isValid(parsedDate)) return null
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const due = new Date(parsedDate)
+      due.setHours(0, 0, 0, 0)
+      
+      const daysUntilDue = differenceInDays(due, today)
+      
+      if (daysUntilDue < 0) {
+        return {
+          status: "overdue",
+          text: `Overdue by ${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) !== 1 ? 's' : ''}`,
+          color: "text-red-700",
+          bgColor: "bg-red-100",
+          icon: AlertTriangle
+        }
+      } else if (daysUntilDue === 0) {
+        return {
+          status: "due-today",
+          text: "Due today",
+          color: "text-orange-700", 
+          bgColor: "bg-orange-100",
+          icon: Clock
+        }
+      } else if (daysUntilDue <= 3) {
+        return {
+          status: "due-soon",
+          text: `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}`,
+          color: "text-yellow-700",
+          bgColor: "bg-yellow-100", 
+          icon: Calendar
+        }
+      } else {
+        return {
+          status: "due-later",
+          text: format(parsedDate, "MMM dd, yyyy"),
+          color: "text-gray-700",
+          bgColor: "bg-gray-100", 
+          icon: Calendar
+        }
+      }
+    } catch {
+      return null
+    }
   }, [])
 
   return (
@@ -90,19 +144,6 @@ export default function GraphPage() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Weight</span>
-                        <span className="text-sm font-semibold">
-                          {selectedNode.weight.toFixed(1)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Type</span>
-                        <span className="text-sm">
-                          {selectedNode.isLeaf ? "Leaf Node" : "Parent Node"}
-                        </span>
-                      </div>
 
                       {/* Task-specific details */}
                       {selectedNode.level === 3 && selectedNode.originalNode && (
@@ -141,6 +182,22 @@ export default function GraphPage() {
                               </span>
                             </div>
                           )}
+
+                          {selectedNode.originalNode.dueDate && (() => {
+                            const dueDateInfo = getDueDateInfo(selectedNode.originalNode.dueDate)
+                            const IconComponent = dueDateInfo?.icon
+                            return dueDateInfo ? (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Due Date</span>
+                                <div className="flex items-center gap-1">
+                                  {IconComponent && <IconComponent className="h-3 w-3" />}
+                                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${dueDateInfo.bgColor} ${dueDateInfo.color}`}>
+                                    {dueDateInfo.text}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : null
+                          })()}
                         </div>
                       )}
 

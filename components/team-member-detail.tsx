@@ -7,6 +7,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -16,8 +17,13 @@ import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { AssigneeSelect } from "@/components/assignee-select"
+import { DatePicker } from "@/components/date-picker"
 import { useData } from "@/contexts/data-context"
 import { TeamMember } from "@/data/team-data"
+import { format, isValid, parseISO, differenceInDays } from "date-fns"
+import { cn } from "@/lib/utils"
 import { 
   Mail, 
   Calendar, 
@@ -29,7 +35,9 @@ import {
   Building,
   Search,
   Filter,
-  X
+  X,
+  MoreHorizontal,
+  Edit
 } from "lucide-react"
 
 interface TeamMemberDetailProps {
@@ -39,9 +47,10 @@ interface TeamMemberDetailProps {
 }
 
 export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetailProps) {
-  const { getMemberProgress, getTasksForMember } = useData()
+  const { getMemberProgress, getTasksForMember, updateTaskStatus, assignTaskToMember, updateTaskDueDate } = useData()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [taskDetailsOpen, setTaskDetailsOpen] = useState<number | null>(null)
   
   // Reset filters when modal opens or member changes
   useEffect(() => {
@@ -112,6 +121,62 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
     })
   }
 
+  const getDueDateInfo = (dueDate: string | null) => {
+    if (!dueDate) return null
+    
+    try {
+      const parsedDate = parseISO(dueDate)
+      if (!isValid(parsedDate)) return null
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const due = new Date(parsedDate)
+      due.setHours(0, 0, 0, 0)
+      
+      const daysUntilDue = differenceInDays(due, today)
+      
+      if (daysUntilDue < 0) {
+        return {
+          status: "overdue",
+          text: `Overdue by ${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) !== 1 ? 's' : ''}`,
+          color: "text-red-700",
+          bgColor: "bg-red-50",
+          borderColor: "border-red-200",
+          icon: AlertTriangle
+        }
+      } else if (daysUntilDue === 0) {
+        return {
+          status: "due-today",
+          text: "Due today",
+          color: "text-orange-700", 
+          bgColor: "bg-orange-50",
+          borderColor: "border-orange-200",
+          icon: Clock
+        }
+      } else if (daysUntilDue <= 3) {
+        return {
+          status: "due-soon",
+          text: `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}`,
+          color: "text-yellow-700",
+          bgColor: "bg-yellow-50", 
+          borderColor: "border-yellow-200",
+          icon: Calendar
+        }
+      } else {
+        return {
+          status: "due-later",
+          text: format(parsedDate, "MMM dd"),
+          color: "text-gray-700",
+          bgColor: "bg-gray-50",
+          borderColor: "border-gray-200", 
+          icon: Calendar
+        }
+      }
+    } catch {
+      return null
+    }
+  }
+
   // Filter tasks based on search query and status
   const filteredTasks = memberTasks.filter(task => {
     const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -134,6 +199,18 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
   const clearFilters = () => {
     setSearchQuery("")
     setStatusFilter("all")
+  }
+
+  const handleTaskComplete = (taskId: number, isCompleted: boolean) => {
+    updateTaskStatus(taskId, isCompleted ? "completed" : "pending")
+  }
+
+  const handleStatusSelect = (taskId: number, newStatus: string) => {
+    updateTaskStatus(taskId, newStatus)
+  }
+
+  const handleTaskDueDateChange = (taskId: number, newDueDate: string | null) => {
+    updateTaskDueDate(taskId, newDueDate)
   }
 
   return (
@@ -325,30 +402,161 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
                       {category} ({tasks.length} tasks)
                     </h3>
                     <div className="grid gap-2">
-                      {tasks.map((task) => (
-                        <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors">
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">{task.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {task.subcategory}
-                            </p>
+                      {tasks.map((task) => {
+                        const dueDateInfo = getDueDateInfo(task.dueDate)
+                        const IconComponent = dueDateInfo?.icon
+                        
+                        return (
+                          <div key={task.id} className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                            task.status === "completed" 
+                              ? "bg-green-50/50 border-green-200/50 opacity-75" 
+                              : "border-border bg-card hover:bg-accent/50"
+                          }`}>
+                            <Checkbox
+                              checked={task.status === "completed"}
+                              onCheckedChange={(checked) => handleTaskComplete(task.id, checked as boolean)}
+                              className="shrink-0"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className={`font-medium text-sm ${
+                                  task.status === "completed" ? "line-through text-muted-foreground" : ""
+                                }`}>
+                                  {task.name}
+                                </p>
+                                <Badge 
+                                  variant="outline" 
+                                  className={getPriorityColor(task.priority)}
+                                >
+                                  {task.priority}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {task.subcategory}
+                              </p>
+                              {dueDateInfo && (
+                                <div className="flex items-center space-x-1 mt-2">
+                                  {IconComponent && <IconComponent className="h-3 w-3" />}
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-xs ${dueDateInfo.bgColor} ${dueDateInfo.color} ${dueDateInfo.borderColor}`}
+                                  >
+                                    {dueDateInfo.text}
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Select value={task.status} onValueChange={(newStatus) => handleStatusSelect(task.id, newStatus)}>
+                                <SelectTrigger className="w-auto h-8 text-xs border-none shadow-none">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                                      Pending
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="in_progress">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                                      In Progress
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="completed">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                                      Completed
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+
+                              {/* Task Details Dialog */}
+                              <Dialog open={taskDetailsOpen === task.id} onOpenChange={(open) => setTaskDetailsOpen(open ? task.id : null)}>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-3 w-3" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle className="flex items-center gap-2">
+                                      <Edit className="h-4 w-4" />
+                                      Task Details
+                                    </DialogTitle>
+                                  </DialogHeader>
+                                  
+                                  <div className="space-y-4">
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Task Name</label>
+                                      <p className="mt-1 text-sm">{task.name}</p>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <label className="text-sm font-medium text-muted-foreground">Priority</label>
+                                        <div className="mt-1">
+                                          <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                                            {task.priority}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                      
+                                      <div>
+                                        <label className="text-sm font-medium text-muted-foreground">Status</label>
+                                        <div className="mt-1">
+                                          <Badge variant="outline" className={getStatusColor(task.status)}>
+                                            {task.status.replace("_", " ")}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Assignee</label>
+                                      <div className="mt-1">
+                                        <AssigneeSelect
+                                          taskId={task.id}
+                                          currentAssignee={task.assignee}
+                                          assignTaskToMember={assignTaskToMember}
+                                        />
+                                      </div>
+                                    </div>
+                                    
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Due Date</label>
+                                      <div className="mt-1">
+                                        <DatePicker
+                                          date={task.dueDate}
+                                          onDateChange={(newDueDate) => handleTaskDueDateChange(task.id, newDueDate)}
+                                          placeholder="Set due date"
+                                        />
+                                      </div>
+                                    </div>
+                                    
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Category</label>
+                                      <p className="mt-1 text-sm text-muted-foreground">{task.category}</p>
+                                    </div>
+                                    
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Subcategory</label>
+                                      <p className="mt-1 text-sm text-muted-foreground">{task.subcategory}</p>
+                                    </div>
+                                    
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Task ID</label>
+                                      <p className="mt-1 text-sm text-muted-foreground">#{task.id}</p>
+                                    </div>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge 
-                              variant="outline" 
-                              className={getPriorityColor(task.priority)}
-                            >
-                              {task.priority}
-                            </Badge>
-                            <Badge 
-                              variant="outline" 
-                              className={getStatusColor(task.status)}
-                            >
-                              {task.status.replace('_', ' ')}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 ))

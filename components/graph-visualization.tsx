@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Maximize, Minimize } from 'lucide-react'
 import * as d3 from 'd3'
 import { GraphData, GraphNode, GraphLink, getCompletionColor, getNodeRadius, getCollisionRadius } from '@/lib/graph-data'
+import { format, isValid, parseISO, differenceInDays } from 'date-fns'
 
 interface GraphVisualizationProps {
   width?: number
@@ -98,16 +99,83 @@ export default function GraphVisualization({
       .selectAll('.graph-tooltip')
       .data([null])
       .join('div')
-      .attr('class', 'graph-tooltip fixed z-50 rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md pointer-events-none opacity-0')
+      .attr('class', 'graph-tooltip fixed z-50 rounded-md border bg-popover px-4 py-3 text-sm text-popover-foreground shadow-md pointer-events-none opacity-0')
+      .style('min-width', '280px')
+      .style('max-width', '320px')
       .style('left', (event.pageX + 10) + 'px')
       .style('top', (event.pageY - 10) + 'px')
+    
+    // Helper function to get due date info
+    const getDueDateInfo = (dueDate: string | null) => {
+      if (!dueDate) return null
       
-    tooltip.html(`
-      <div><strong>${d.name}</strong></div>
-      <div>Level: ${d.level}</div>
-      <div>Completion: ${Math.round(d.completion * 100)}%</div>
-      <div>Weight: ${d.weight.toFixed(1)}</div>
-    `)
+      try {
+        const parsedDate = parseISO(dueDate)
+        if (!isValid(parsedDate)) return null
+        
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const due = new Date(parsedDate)
+        due.setHours(0, 0, 0, 0)
+        
+        const daysUntilDue = differenceInDays(due, today)
+        
+        if (daysUntilDue < 0) {
+          return `Overdue by ${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) !== 1 ? 's' : ''}`
+        } else if (daysUntilDue === 0) {
+          return "Due today"
+        } else if (daysUntilDue <= 3) {
+          return `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}`
+        } else {
+          return format(parsedDate, "MMM dd, yyyy")
+        }
+      } catch {
+        return null
+      }
+    }
+
+    let tooltipContent = `<div style="margin-bottom: 12px;"><strong>${d.name}</strong></div>`
+    tooltipContent += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><span style="font-weight: 500;">Completion</span><span>${Math.round(d.completion * 100)}%</span></div>`
+    
+    // Show task-specific information for task nodes (level 3)
+    if (d.level === 3 && d.originalNode) {
+      const task = d.originalNode
+      
+      if (task.status) {
+        const statusColors = {
+          'completed': 'background: rgb(220, 252, 231); color: rgb(22, 101, 52); border: 1px solid rgb(187, 247, 208);',
+          'in_progress': 'background: rgb(219, 234, 254); color: rgb(30, 58, 138); border: 1px solid rgb(147, 197, 253);',
+          'pending': 'background: rgb(243, 244, 246); color: rgb(55, 65, 81); border: 1px solid rgb(209, 213, 219);'
+        }
+        const statusStyle = statusColors[task.status as keyof typeof statusColors] || statusColors['pending']
+        tooltipContent += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><span style="font-weight: 500;">Status</span><span style="padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; ${statusStyle}">${task.status.replace('_', ' ')}</span></div>`
+      }
+      
+      if (task.priority) {
+        const priorityColors = {
+          'high': 'background: rgb(254, 226, 226); color: rgb(153, 27, 27); border: 1px solid rgb(252, 165, 165);',
+          'medium': 'background: rgb(254, 249, 195); color: rgb(146, 64, 14); border: 1px solid rgb(251, 191, 36);',
+          'low': 'background: rgb(220, 252, 231); color: rgb(22, 101, 52); border: 1px solid rgb(187, 247, 208);'
+        }
+        const priorityStyle = priorityColors[task.priority as keyof typeof priorityColors] || priorityColors['medium']
+        tooltipContent += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><span style="font-weight: 500;">Priority</span><span style="padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; ${priorityStyle}">${task.priority}</span></div>`
+      }
+      
+      if (task.assignee) {
+        tooltipContent += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><span style="font-weight: 500;">Assignee</span><span>${task.assignee}</span></div>`
+      }
+      
+      if (task.dueDate) {
+        const dueDateInfo = getDueDateInfo(task.dueDate)
+        if (dueDateInfo) {
+          // For due dates, show the formatted date without badge styling for cleaner look
+          const rawDate = format(parseISO(task.dueDate), "MMM dd, yyyy")
+          tooltipContent += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><span style="font-weight: 500;">Due Date</span><span>${rawDate}</span></div>`
+        }
+      }
+    }
+      
+    tooltip.html(tooltipContent)
     .transition()
     .duration(200)
     .style('opacity', 1)

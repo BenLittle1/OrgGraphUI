@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDownIcon, X } from "lucide-react"
+import { ChevronDownIcon, X, Calendar as CalendarIcon } from "lucide-react"
 import { format, isValid, parseISO } from "date-fns"
 
 import { cn } from "@/lib/utils"
@@ -84,7 +84,10 @@ export function DatePicker({
             className
           )}
         >
-          <span className="truncate">{displayValue}</span>
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="h-3 w-3 shrink-0 opacity-70" />
+            <span className="truncate">{displayValue}</span>
+          </div>
           <div className="flex items-center gap-1 ml-auto pl-2">
             {selectedDate && (
               <X
