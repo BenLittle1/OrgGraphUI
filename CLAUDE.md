@@ -8,9 +8,10 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 
 **Core Features:**
 - **Overview**: Summary cards, interactive progress charts, high-priority task table
-- **Checklist**: Filterable task management with real-time status updates and task assignment
+- **Checklist**: Filterable task management with real-time status updates, task assignment, and due date management
 - **Graph**: D3.js force-directed visualization with detailed node inspection
 - **Team**: Comprehensive team member management with progress tracking
+- **Due Date Management**: Complete task scheduling with visual indicators, overdue tracking, and dropdown calendar navigation
 - **Unified State**: Cross-view reactivity with instant data synchronization
 - **Theme Support**: Persistent light/dark mode with comprehensive design tokens
 
@@ -31,6 +32,11 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 ### **Data Visualization**
 - **D3.js 7.9.0**: Force-directed graph simulation, data transformations
 - **Custom Physics Engine**: Multi-force layout with collision detection
+
+### **Date & Time Management**
+- **react-day-picker 9.x**: Calendar component with dropdown navigation and accessibility
+- **date-fns**: Date parsing, formatting, and manipulation utilities
+- **ISO 8601 Format**: Backend-compatible date storage format
 
 ### **Development Tools**
 - **ESLint**: Code quality and consistency
@@ -53,11 +59,13 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 │   │   ├── accordion.tsx        # Collapsible content sections
 │   │   ├── badge.tsx           # Status/priority indicators
 │   │   ├── button.tsx          # Interactive buttons with variants
+│   │   ├── calendar.tsx        # Date picker calendar with dropdown navigation
 │   │   ├── card.tsx            # Content containers
 │   │   ├── checkbox.tsx        # Form checkboxes
 │   │   ├── dialog.tsx          # Modal dialogs
 │   │   ├── dropdown-menu.tsx   # Contextual menus
 │   │   ├── input.tsx           # Form inputs
+│   │   ├── popover.tsx         # Floating content containers
 │   │   ├── progress.tsx        # Progress indicators
 │   │   ├── select.tsx          # Dropdown selectors
 │   │   ├── sidebar.tsx         # Navigation sidebar
@@ -68,11 +76,12 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 │   ├── chart-area-interactive.tsx # Overview progress charts
 │   ├── checklist-header.tsx     # Filters, search controls, and summary cards
 │   ├── data-table.tsx           # High-priority tasks table
+│   ├── date-picker.tsx          # Due date picker with visual indicators and calendar
 │   ├── graph-visualization.tsx   # D3.js force-directed graph
 │   ├── mode-toggle.tsx          # Dark/light theme toggle
 │   ├── section-cards.tsx        # Overview summary statistics
 │   ├── site-header.tsx          # Top navigation bar
-│   ├── task-item.tsx            # Individual task component with assignment
+│   ├── task-item.tsx            # Individual task component with assignment and due dates
 │   ├── team-member-card.tsx     # Team member display card
 │   ├── team-member-detail.tsx   # Team member detail modal
 │   └── theme-provider.tsx       # Theme context wrapper
@@ -145,6 +154,7 @@ interface Task {
   status: "pending" | "in_progress" | "completed"
   priority: "high" | "medium" | "low"
   assignee: string | null
+  dueDate: string | null  // ISO 8601 format (YYYY-MM-DD) for backend compatibility
 }
 
 interface Subcategory {
@@ -214,6 +224,8 @@ interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
 - `GraphVisualization`: Node colors update automatically based on task completion status
 - `TeamMemberCard`: Shows real-time progress tracking for individual team members
 - `AssigneeSelect`: Provides task assignment functionality with team member selection
+- `DatePicker`: Task due date management with visual indicators and calendar integration
+- `TaskItem`: Complete task management including status, assignment, and due date updates
 - `ChecklistHeader`: Displays summary cards including in-progress task tracking
 
 ## Graph Visualization System
@@ -286,6 +298,8 @@ The graph uses a sophisticated multi-force physics simulation for optimal node p
 - `TeamMemberCard`: Individual team member cards with progress visualization
 - `TeamMemberDetail`: Comprehensive modal with detailed member task breakdown
 - `AssigneeSelect`: Task assignment dropdown with avatar-based team member selection
+- `DatePicker`: Advanced due date picker with calendar dropdown, visual status indicators, and date validation
+- `TaskItem`: Complete task management interface with status, priority, assignment, and due date controls
 
 ### **UI Components** (Located in `/components/ui/`)
 All components follow shadcn/ui patterns with:
@@ -338,11 +352,22 @@ Uses comprehensive CSS variables defined in `app/globals.css`:
 - **Assignee System**: Full team member assignment with name-based mapping
 - **Unique IDs**: Task IDs are unique across all categories/subcategories
 
+### **Due Date Management**
+- **Calendar Interface**: shadcn/ui v4 calendar with dropdown month/year navigation and optimized sizing (72px cells, 320px width)
+- **Visual Indicators**: Color-coded status display with overdue (red), due today (orange), due soon (yellow), and future (gray) styling
+- **Smart Date Picker**: ChevronDown icon, proper spacing, visual feedback for different due date states
+- **Date Format**: ISO 8601 format (YYYY-MM-DD) for backend compatibility
+- **Date Validation**: Restricts selection to reasonable date ranges (past year to 5 years future)
+- **Cross-View Integration**: Due dates display consistently across checklist, task dialogs, and data tables
+- **Automatic Calculations**: Days until due, overdue tracking, and status-based coloring
+- **Accessibility**: Keyboard navigation, screen reader support, and proper ARIA labels
+
 ### **Real-time Updates**
-- **Cross-View Synchronization**: Status changes propagate instantly across Overview, Checklist, Graph, and Team views
+- **Cross-View Synchronization**: Status changes and due date updates propagate instantly across Overview, Checklist, Graph, and Team views
 - **Automatic Calculations**: Summary statistics update live without manual refresh
-- **Visual Feedback**: Immediate color changes in graph nodes, dashboard cards, and team progress
+- **Visual Feedback**: Immediate color changes in graph nodes, dashboard cards, team progress, and due date indicators
 - **Assignment Tracking**: Task assignments instantly reflect in team member progress calculations
+- **Due Date Reactivity**: Due date changes immediately update visual indicators and task styling across all views
 
 ## Import Paths & Code Organization
 
@@ -364,6 +389,7 @@ const {
   teamData,
   updateTaskStatus, 
   assignTaskToMember,
+  updateTaskDueDate,
   getTaskById,
   getMemberProgress,
   getTasksForMember 
@@ -455,6 +481,13 @@ const {
 - **Components not styled**: Ensure Tailwind classes are not being purged
 - **Responsive issues**: Test with different viewport sizes in DevTools
 
+**Due Date Component Issues:**
+- **Calendar alignment problems**: Use shadcn/ui v4 calendar with proper `getDefaultClassNames()` and CSS custom properties
+- **Date picker too small**: Adjust `[--cell-size:theme(spacing.X)]` for larger calendar cells (current: spacing.18 = 72px)
+- **Calendar navigation not working**: Ensure `captionLayout="dropdown"` for month/year dropdowns
+- **Date format errors**: Always use ISO 8601 format (YYYY-MM-DD) with date-fns parsing/formatting
+- **Popover positioning**: Use `align="start"` and `overflow-hidden p-0` for proper calendar display
+
 ### **Development Tips**
 - **Hot Reload Issues**: Restart dev server if TypeScript changes aren't reflected
 - **Build Failures**: Run `npm run lint` to catch common issues before build
@@ -493,13 +526,15 @@ const {
 
 ## Data Synchronization
 
-**Real-time Cross-View Updates**: Task status changes propagate instantly across all views:
+**Real-time Cross-View Updates**: Task status changes and due date updates propagate instantly across all views:
 - ✅ **Overview** ↔️ **Checklist** ↔️ **Graph** ↔️ **Team**
 - Graph node colors change immediately when tasks are completed/updated in other views
 - Summary statistics update live across overview cards, checklist headers, and team progress
 - Team member progress updates automatically when tasks are assigned or status changes
-- Task assignments reflect immediately in all views with proper name mapping
+- Task assignments and due dates reflect immediately in all views with proper name mapping
+- Due date visual indicators update instantly across task items, dialogs, and data tables
 - Active Tasks card shows real-time count of in_progress tasks across overview and checklist
+- Overdue task highlighting updates automatically based on current date calculations
 - Unified state ensures data consistency without manual refresh
 - **PERFORMANCE OPTIMIZED (2025)**: Selective re-rendering and strategic memoization eliminate unnecessary recreations
 

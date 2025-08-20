@@ -110,7 +110,7 @@ export function SectionCards() {
               <>
                 <div className="text-2xl font-bold">{stat.value}</div>
                 <p className="text-xs text-muted-foreground">
-                  <span className={stat.color}>{stat.change}</span>
+                  {stat.change}
                 </p>
               </>
             )}

@@ -10,6 +10,7 @@ export interface Task {
   status: string
   priority: string
   assignee: string | null
+  dueDate: string | null
 }
 
 export interface Subcategory {
@@ -50,6 +51,7 @@ interface DataContextType {
   updateTaskStatus: (taskId: number, newStatus: string) => void
   updateTaskAssignee: (taskId: number, assignee: string | null) => void
   updateTaskPriority: (taskId: number, priority: string) => void
+  updateTaskDueDate: (taskId: number, dueDate: string | null) => void
   getTaskById: (taskId: number) => Task | null
   getCategoryProgress: (categoryId: number) => number
   getHighPriorityTasks: (limit?: number) => Array<Task & { category: string; subcategory: string }>
@@ -86,7 +88,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             
             return {
               ...task,
-              assignee: memberName
+              assignee: memberName,
+              dueDate: null
             }
           })
         }))
@@ -166,6 +169,25 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           ...subcategory,
           tasks: subcategory.tasks.map(task =>
             task.id === taskId ? { ...task, priority } : task
+          )
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const updateTaskDueDate = useCallback((taskId: number, dueDate: string | null) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task =>
+            task.id === taskId ? { ...task, dueDate } : task
           )
         }))
       }))
@@ -316,6 +338,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateTaskStatus,
     updateTaskAssignee,
     updateTaskPriority,
+    updateTaskDueDate,
     getTaskById,
     getCategoryProgress,
     getHighPriorityTasks,
@@ -333,6 +356,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateTaskStatus,
     updateTaskAssignee,
     updateTaskPriority,
+    updateTaskDueDate,
     getTaskById,
     getCategoryProgress,
     getHighPriorityTasks,

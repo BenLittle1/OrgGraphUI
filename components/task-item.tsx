@@ -7,17 +7,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AssigneeSelect } from "@/components/assignee-select"
+import { DatePicker } from "@/components/date-picker"
 import { Task } from "@/contexts/data-context"
-import { User, MoreHorizontal, Edit } from "lucide-react"
+import { User, MoreHorizontal, Edit, Calendar, Clock, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { format, isValid, parseISO, differenceInDays } from "date-fns"
 
 interface TaskItemProps {
   task: Task
   updateTaskStatus: (taskId: number, newStatus: string) => void
   assignTaskToMember: (taskId: number, memberId: string | null) => void
+  updateTaskDueDate: (taskId: number, dueDate: string | null) => void
 }
 
-export function TaskItem({ task, updateTaskStatus, assignTaskToMember }: TaskItemProps) {
+export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTaskDueDate }: TaskItemProps) {
   const [showDetails, setShowDetails] = useState(false)
 
   const handleStatusChange = (checked: boolean) => {
@@ -55,11 +58,75 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember }: TaskIte
     }
   }
 
+  const getDueDateInfo = () => {
+    if (!task.dueDate) return null
+    
+    try {
+      const dueDate = parseISO(task.dueDate)
+      if (!isValid(dueDate)) return null
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const due = new Date(dueDate)
+      due.setHours(0, 0, 0, 0)
+      
+      const daysUntilDue = differenceInDays(due, today)
+      
+      if (daysUntilDue < 0) {
+        return {
+          status: "overdue",
+          text: `Overdue by ${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) !== 1 ? 's' : ''}`,
+          color: "text-red-600",
+          bgColor: "bg-red-50",
+          borderColor: "border-red-200",
+          icon: AlertTriangle
+        }
+      } else if (daysUntilDue === 0) {
+        return {
+          status: "due-today",
+          text: "Due today",
+          color: "text-orange-600", 
+          bgColor: "bg-orange-50",
+          borderColor: "border-orange-200",
+          icon: Clock
+        }
+      } else if (daysUntilDue <= 3) {
+        return {
+          status: "due-soon",
+          text: `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}`,
+          color: "text-yellow-600",
+          bgColor: "bg-yellow-50", 
+          borderColor: "border-yellow-200",
+          icon: Calendar
+        }
+      } else {
+        return {
+          status: "due-later",
+          text: format(dueDate, "MMM dd"),
+          color: "text-gray-600",
+          bgColor: "bg-gray-50",
+          borderColor: "border-gray-200", 
+          icon: Calendar
+        }
+      }
+    } catch {
+      return null
+    }
+  }
+
+  const dueDateInfo = getDueDateInfo()
+
+  const handleDueDateChange = (newDueDate: string | null) => {
+    updateTaskDueDate(task.id, newDueDate)
+  }
+
   return (
     <div
       className={cn(
         "flex items-center gap-3 p-3 rounded-lg border transition-all hover:bg-muted/50",
-        task.status === "completed" && "opacity-75 bg-green-50/50"
+        task.status === "completed" && "opacity-75 bg-green-50/50",
+        dueDateInfo && dueDateInfo.status === "overdue" && "border-red-200 bg-red-50/30",
+        dueDateInfo && dueDateInfo.status === "due-today" && "border-orange-200 bg-orange-50/30"
       )}
     >
       {/* Checkbox */}
@@ -88,6 +155,14 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember }: TaskIte
           <Badge variant="outline" className={cn("text-xs", getStatusColor(task.status))}>
             {task.status.replace("_", " ")}
           </Badge>
+          
+          {/* Due Date Picker */}
+          <DatePicker
+            date={task.dueDate}
+            onDateChange={handleDueDateChange}
+            placeholder="Set due date"
+            className="h-6 text-xs min-w-[120px]"
+          />
           
           {/* Assignee */}
           <AssigneeSelect
@@ -174,6 +249,17 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember }: TaskIte
                     taskId={task.id}
                     currentAssignee={task.assignee}
                     assignTaskToMember={assignTaskToMember}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Due Date</label>
+                <div className="mt-1">
+                  <DatePicker
+                    date={task.dueDate}
+                    onDateChange={handleDueDateChange}
+                    placeholder="Set due date"
                   />
                 </div>
               </div>

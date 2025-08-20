@@ -12,9 +12,10 @@ interface CategorySectionProps {
   category: Category
   updateTaskStatus: (taskId: number, newStatus: string) => void
   assignTaskToMember: (taskId: number, memberId: string | null) => void
+  updateTaskDueDate: (taskId: number, dueDate: string | null) => void
 }
 
-export function CategorySection({ category, updateTaskStatus, assignTaskToMember }: CategorySectionProps) {
+export function CategorySection({ category, updateTaskStatus, assignTaskToMember, updateTaskDueDate }: CategorySectionProps) {
   // Calculate category progress
   const allTasks = category.subcategories.flatMap(sub => sub.tasks)
   const completedTasks = allTasks.filter(task => task.status === "completed")
@@ -89,6 +90,7 @@ export function CategorySection({ category, updateTaskStatus, assignTaskToMember
                         task={task}
                         updateTaskStatus={updateTaskStatus}
                         assignTaskToMember={assignTaskToMember}
+                        updateTaskDueDate={updateTaskDueDate}
                       />
                     ))}
                   </div>

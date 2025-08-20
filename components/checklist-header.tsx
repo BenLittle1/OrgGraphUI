@@ -1,6 +1,6 @@
 "use client"
 
-import { Search } from "lucide-react"
+import { Search, Activity } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -101,11 +101,12 @@ export function ChecklistHeader({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold mb-2 text-blue-600">{data.summary.statusCounts.in_progress}</div>
-            <p className="text-xs text-muted-foreground mt-2">
-              tasks currently in progress
+            <div className="text-2xl font-bold">{data.summary.statusCounts.in_progress}</div>
+            <p className="text-xs text-muted-foreground">
+              currently in progress
             </p>
           </CardContent>
         </Card>
