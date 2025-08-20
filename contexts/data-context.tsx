@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useCallback } from "react"
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react"
 import initialData from "@/data.json"
 
 export interface Task {
@@ -209,7 +209,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     })
   }, [recalculateSummary])
 
-  const value: DataContextType = {
+  const value: DataContextType = useMemo(() => ({
     data,
     updateTaskStatus,
     updateTaskAssignee,
@@ -219,7 +219,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     getHighPriorityTasks,
     resetAllTasks,
     markCategoryComplete
-  }
+  }), [
+    data,
+    updateTaskStatus,
+    updateTaskAssignee,
+    updateTaskPriority,
+    getTaskById,
+    getCategoryProgress,
+    getHighPriorityTasks,
+    resetAllTasks,
+    markCategoryComplete
+  ])
 
   return (
     <DataContext.Provider value={value}>

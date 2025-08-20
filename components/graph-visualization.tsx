@@ -21,6 +21,8 @@ export default function GraphVisualization({
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphLink> | null>(null)
+  const nodeSelectionRef = useRef<d3.Selection<SVGGElement, GraphNode, SVGGElement, unknown> | null>(null)
+  const selectedNodeRef = useRef<string | null>(null)
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
   const [dimensions, setDimensions] = useState({ width, height })
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -165,6 +167,24 @@ export default function GraphVisualization({
     })
   }, [])
 
+  // Update node selection without recreating visualization
+  const updateSelection = useCallback((newSelectedNodeId: string | null) => {
+    if (!nodeSelectionRef.current) return
+    
+    // Update all nodes to default state
+    nodeSelectionRef.current.selectAll('circle')
+      .attr('stroke', 'hsl(var(--background))')
+      .attr('stroke-width', 1.5)
+    
+    // Highlight selected node if any
+    if (newSelectedNodeId) {
+      nodeSelectionRef.current.selectAll('circle')
+        .filter((d: any) => d.id === newSelectedNodeId)
+        .attr('stroke', 'hsl(var(--primary))')
+        .attr('stroke-width', 3)
+    }
+  }, [])
+
   // Create visualization using exact specification from guide
   const createVisualization = useCallback(() => {
     if (!svgRef.current) return
@@ -303,6 +323,9 @@ export default function GraphVisualization({
       .join('g')
       .attr('class', 'node')
 
+    // Store node selection reference for updates
+    nodeSelectionRef.current = nodeSelection
+
     // Add circles - exact from guide
     nodeSelection.append('circle')
       .attr('r', d => Math.max(12, Math.sqrt(d.weight) * 6))
@@ -360,16 +383,11 @@ export default function GraphVisualization({
       .on('click', (event, d) => {
         event.stopPropagation()
         
-        // Visual selection feedback
-        nodeSelection.selectAll('circle')
-          .attr('stroke', 'hsl(var(--background))')
-          .attr('stroke-width', 1.5)
-        
-        d3.select(event.currentTarget).select('circle')
-          .attr('stroke', 'hsl(var(--primary))')
-          .attr('stroke-width', 3)
-        
-        setSelectedNode(d.id === selectedNode ? null : d.id)
+        // Toggle selection using ref to avoid closure dependency
+        const newSelectedId = d.id === selectedNodeRef.current ? null : d.id
+        selectedNodeRef.current = newSelectedId
+        setSelectedNode(newSelectedId)
+        updateSelection(newSelectedId)
         
         if (onNodeClick) {
           onNodeClick(d)
@@ -379,10 +397,9 @@ export default function GraphVisualization({
     // Background click to clear selection
     svg.on('click', (event) => {
       if (event.target === event.currentTarget) {
+        selectedNodeRef.current = null
         setSelectedNode(null)
-        nodeSelection.selectAll('circle')
-          .attr('stroke', 'hsl(var(--background))')
-          .attr('stroke-width', 1.5)
+        updateSelection(null)
       }
     })
 
@@ -400,7 +417,13 @@ export default function GraphVisualization({
         .attr('transform', d => `translate(${d.x},${d.y})`)
     })
 
-  }, [data, dimensions, selectedNode, onNodeClick, showTooltip, hideTooltip, renderNodeLabels, processedData])
+  }, [data, dimensions, onNodeClick, showTooltip, hideTooltip, renderNodeLabels, processedData])
+
+  // Sync selection state with ref and update visual selection
+  useEffect(() => {
+    selectedNodeRef.current = selectedNode
+    updateSelection(selectedNode)
+  }, [selectedNode, updateSelection])
 
   // Create visualization when data changes
   useEffect(() => {

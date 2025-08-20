@@ -6,18 +6,18 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import GraphVisualization from "@/components/graph-visualization"
 import { convertToGraphData, GraphNode } from "@/lib/graph-data"
 import { useData } from "@/contexts/data-context"
-import { useState } from "react"
+import { useState, useMemo, useCallback } from "react"
 
 export default function GraphPage() {
   const { data } = useData()
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
   
   // Transform business process data to graph format
-  const graphData = convertToGraphData(data)
+  const graphData = useMemo(() => convertToGraphData(data), [data])
   
-  const handleNodeClick = (node: GraphNode) => {
+  const handleNodeClick = useCallback((node: GraphNode) => {
     setSelectedNode(node)
-  }
+  }, [])
 
   return (
     <SidebarProvider>
