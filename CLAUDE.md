@@ -487,13 +487,13 @@ const {
 
 **Due Date Component Issues:**
 - **Calendar alignment problems**: Use shadcn/ui v4 calendar with proper `getDefaultClassNames()` and CSS custom properties
-- **Date picker too small**: Adjust `[--cell-size:theme(spacing.X)]` for larger calendar cells (current: spacing.18 = 72px)
+- **Date picker too small**: Adjust `[--cell-size:theme(spacing.X)]` for larger calendar cells (current: spacing.20 = 80px)
 - **Calendar navigation not working**: Ensure `captionLayout="dropdown"` for month/year dropdowns
 - **Date format errors**: Always use ISO 8601 format (YYYY-MM-DD) with date-fns parsing/formatting
 - **Popover positioning**: Use `align="start"` and `overflow-hidden p-0` for proper calendar display
 
 **Calendar View Issues:**
-- **Tailwind CSS Warning (Non-breaking)**: `[--cell-size:theme(spacing.18)]` generates build warning because `spacing.18` doesn't exist in Tailwind's default spacing scale. The spacing scale includes 0, 0.5, 1-16, 20, 24, etc., but not 18. Warning appears during build but doesn't affect functionality. To fix: use `spacing.16` (64px) or `spacing.20` (80px) instead of the non-existent `spacing.18` value.
+- **Tailwind CSS Warning (FIXED)**: Previous issue with `[--cell-size:theme(spacing.18)]` has been resolved by updating to `spacing.20` (80px) which is a valid Tailwind spacing value. Calendar cells are now slightly larger (80px vs intended 72px) but provide better visual spacing.
 
 ### **Development Tips**
 - **Hot Reload Issues**: Restart dev server if TypeScript changes aren't reflected
