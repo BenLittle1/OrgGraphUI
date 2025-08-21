@@ -62,29 +62,6 @@ export default function TeamPage() {
         <SiteHeader />
         <div className="flex flex-1 flex-col">
           <div className="flex flex-1 flex-col gap-4 py-6">
-            {/* Page Header */}
-            <div className="px-4 lg:px-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight">Team</h1>
-                  <p className="text-muted-foreground mt-2">
-                    Meet the talented individuals driving CodeAid forward
-                  </p>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <Card className="px-4 py-2">
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-5 w-5 text-primary" />
-                      <div>
-                        <div className="text-2xl font-bold">{totalActiveMembers}</div>
-                        <div className="text-xs text-muted-foreground">Active Members</div>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              </div>
-            </div>
-
             <div className="px-4 lg:px-6">
               {/* Team Statistics */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -164,7 +141,7 @@ export default function TeamPage() {
 
               {/* Team Members Grid */}
               {filteredMembers.length > 0 ? (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-6 md:grid-cols-3">
                   {filteredMembers.map((member) => (
                     <TeamMemberCard
                       key={member.id}

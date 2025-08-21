@@ -84,32 +84,6 @@ export default function GraphPage() {
         <SiteHeader />
         <div className="flex flex-1 flex-col h-[calc(100vh-3.5rem)]">
           <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-            {/* Page Header */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h1 className="text-2xl font-bold tracking-tight">Process Graph</h1>
-                <p className="text-muted-foreground">
-                  Interactive visualization of all business processes and their relationships
-                </p>
-              </div>
-              
-              {/* Stats Summary */}
-              <div className="flex gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{data.summary.totalCategories}</div>
-                  <div className="text-sm text-muted-foreground">Categories</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{data.summary.totalSubcategories}</div>
-                  <div className="text-sm text-muted-foreground">Subcategories</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{data.summary.totalTasks}</div>
-                  <div className="text-sm text-muted-foreground">Tasks</div>
-                </div>
-              </div>
-            </div>
-
             {/* Main Content Area */}
             <div className="flex flex-1 relative min-h-0">
               {/* Graph Visualization - Full Width */}

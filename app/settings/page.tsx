@@ -60,18 +60,6 @@ export default function SettingsPage() {
         <SiteHeader />
         <div className="flex flex-1 flex-col">
           <div className="flex flex-1 flex-col gap-4 py-6">
-            {/* Page Header */}
-            <div className="px-4 lg:px-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-                  <p className="text-muted-foreground mt-2">
-                    Manage your account settings and preferences
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Settings Cards */}
             <div className="px-4 lg:px-6">
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

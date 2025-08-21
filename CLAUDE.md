@@ -7,12 +7,13 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 CodeAid is a sophisticated business process checklist dashboard built with Next.js 14, TypeScript, and shadcn/ui components. The application displays 93 business processes across 7 categories in a unified dashboard with real-time statistics, interactive visualizations, and collaborative task management.
 
 **Core Features:**
-- **Overview**: Summary cards, interactive progress charts, high-priority task table
+- **Overview**: Summary cards, interactive progress charts, high-priority task table, and chronological upcoming tasks view
 - **Checklist**: Filterable task management with real-time status updates, task assignment, and due date management
 - **Graph**: D3.js force-directed visualization with detailed node inspection
 - **Team**: Comprehensive team member management with progress tracking
+- **Calendar**: Monthly calendar view displaying tasks by due date with advanced filtering and task editing capabilities
 - **Due Date Management**: Complete task scheduling with visual indicators, overdue tracking, and dropdown calendar navigation
-- **Unified State**: Cross-view reactivity with instant data synchronization
+- **Unified State**: Cross-view reactivity with instant data synchronization across all 5 views
 - **Theme Support**: Persistent light/dark mode with comprehensive design tokens
 
 ## Technology Stack
@@ -48,6 +49,7 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 ```
 /Users/benlittle/Desktop/Stuff/Projects/AXL/OrgGraphUI/
 ├── app/                          # Next.js 14 app directory
+│   ├── calendar/page.tsx        # Calendar view with monthly task display and filtering
 │   ├── checklist/page.tsx       # Checklist view with filters and task assignment
 │   ├── graph/page.tsx           # Interactive graph visualization
 │   ├── team/page.tsx            # Team member management and progress tracking
@@ -72,6 +74,8 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 │   │   └── table.tsx           # Data tables
 │   ├── app-sidebar.tsx          # Navigation with active states
 │   ├── assignee-select.tsx      # Task assignment dropdown component
+│   ├── calendar-event.tsx       # Calendar task event component with editing capabilities
+│   ├── calendar-view.tsx        # Monthly calendar grid with task display and filtering
 │   ├── category-section.tsx     # Checklist category display
 │   ├── chart-area-interactive.tsx # Overview progress charts
 │   ├── checklist-header.tsx     # Filters, search controls, and summary cards
@@ -119,6 +123,12 @@ npm run lint         # Run ESLint for code quality checks
 - **TypeScript**: Strict mode enabled with path mapping
 - **Prettier**: Code formatting (if configured in IDE)
 
+### **Build Status**
+- **Production Ready**: All builds pass with zero errors and warnings
+- **Recent Fixes Applied**: TypeScript errors resolved in calendar components, CSS warnings eliminated
+- **Bundle Optimization**: Automatic code splitting with optimized route-based chunks
+- **Static Generation**: All pages pre-rendered for optimal performance
+
 ## Data Architecture
 
 ### **Unified State Management**
@@ -144,6 +154,21 @@ The application uses two main data sources:
 - **Task Assignments**: Mapping of team members to specific task IDs
 - **Member Profiles**: Complete profiles with roles, departments, contact info, hire dates
 - **Progress Tracking**: Real-time calculation of individual member task completion
+
+### **Current Architecture Limitations**
+
+**Single-Company Design**: The current implementation is designed for a single company/organization:
+- All data flows through static files (`data.json`, `team-data.ts`)
+- No company isolation or multi-tenancy support
+- State management assumes one dataset per application instance
+- No user authentication or company-based access control
+
+**Future Multi-Company Architecture**: Planned Supabase integration will enable:
+- **Database Schema**: Separate tables for companies, users, teams, tasks with proper foreign key relationships
+- **Company Isolation**: Complete data separation between organizations
+- **User Management**: Authentication with company-based role assignments
+- **Scalable Teams**: Support for larger teams and custom departmental structures
+- **Data Migration**: Current `data.json` will serve as template for new company onboarding
 
 ### **TypeScript Interfaces**
 
@@ -223,6 +248,8 @@ interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
 - `ChartAreaInteractive`: Renders category progress with live completion percentages
 - `GraphVisualization`: Node colors update automatically based on task completion status
 - `TeamMemberCard`: Shows real-time progress tracking for individual team members
+- `CalendarView`: Monthly calendar display with task filtering and real-time due date tracking
+- `CalendarEvent`: Interactive task events with full editing capabilities and status updates
 - `AssigneeSelect`: Provides task assignment functionality with team member selection
 - `DatePicker`: Task due date management with visual indicators and calendar integration
 - `TaskItem`: Complete task management including status, assignment, and due date updates
@@ -285,6 +312,46 @@ The graph uses a sophisticated multi-force physics simulation for optimal node p
 - **Selective Rendering**: Optimized label rendering based on zoom level
 - **Event Throttling**: Debounced resize and interaction handlers
 
+## Calendar View System
+
+### **Monthly Calendar Grid**
+The calendar uses a sophisticated month-based layout with intelligent task organization:
+
+**Calendar Structure**:
+- **Month Grid**: 7-column weekly layout with automatic week calculation using date-fns
+- **Task Events**: Up to 3 visible tasks per day with "+X more" overflow indicator
+- **Dynamic Sizing**: Responsive design with mobile-optimized min-heights (80px mobile, 120px desktop)
+- **Current Day Highlighting**: Blue accent background and circular date indicator for today
+
+### **Advanced Filtering System**
+**Compact Header Design** with bordered statistics and popover controls:
+- **Status Filter**: All, Pending, Active, Done with real-time task count updates
+- **Priority Filter**: All, High, Medium, Low with color-coded visual feedback
+- **Assignee Filter**: Team member dropdown with "Unassigned" option and avatar display
+- **Show Completed Toggle**: Binary on/off control for completed task visibility
+- **Clear Filters**: One-click reset with active filter indicator badge
+
+### **Task Event Interaction**
+**CalendarEvent Component Features**:
+- **Compact Mode**: Priority color-coded cards with status dots, truncated names, and mini icons
+- **Full Edit Dialog**: Complete task management with status, priority, assignee, and due date controls
+- **Visual Indicators**: Priority background colors, status indicators, assignee avatars, and due date timestamps
+- **Responsive Layout**: Adaptive sizing for different screen sizes with proper text truncation
+
+### **Monthly Statistics Integration**
+**Real-time Metrics Display** (bordered header section):
+- **Total Tasks**: Current month task count with live updates
+- **Completed**: Green-coded completion count
+- **Active**: Blue-coded in-progress task count  
+- **Overdue**: Red-coded overdue task count (conditional display)
+- **Navigation**: Previous/next month controls with "Today" quick action
+
+### **Performance Optimizations**
+- **Memoized Calculations**: Week grid generation and task grouping cached with useMemo
+- **Efficient Date Handling**: date-fns integration for fast date operations and formatting
+- **Filtered Data Pipeline**: Multi-stage filtering system with early returns for performance
+- **Responsive Events**: Debounced month navigation and filter state management
+
 ## Component Architecture
 
 ### **Layout Components**
@@ -297,6 +364,8 @@ The graph uses a sophisticated multi-force physics simulation for optimal node p
 - `ChartAreaInteractive`: Interactive progress charts with drill-down capability
 - `TeamMemberCard`: Individual team member cards with progress visualization
 - `TeamMemberDetail`: Comprehensive modal with detailed member task breakdown, interactive task management, and full task editing capabilities
+- `CalendarView`: Monthly calendar grid with task display, advanced filtering (status, priority, assignee), and compact statistical headers
+- `CalendarEvent`: Task event rendering component with compact and full edit modes, priority color coding, and complete task management
 - `AssigneeSelect`: Task assignment dropdown with avatar-based team member selection
 - `DatePicker`: Advanced due date picker with calendar dropdown, visual status indicators, and date validation
 - `TaskItem`: Complete task management interface with checkbox completion, priority badges, status dropdowns, assignment controls, due date pickers, and three-dot detail menus
@@ -356,21 +425,22 @@ Uses comprehensive CSS variables defined in `app/globals.css`:
 - **Unique IDs**: Task IDs are unique across all categories/subcategories
 
 ### **Due Date Management**
-- **Calendar Interface**: shadcn/ui v4 calendar with dropdown month/year navigation and optimized sizing (72px cells, 320px width)
+- **Calendar Interface**: shadcn/ui v4 calendar with dropdown month/year navigation and optimized sizing (80px cells, 320px width)
 - **Visual Indicators**: Color-coded status display with overdue (red), due today (orange), due soon (yellow), and future (gray) styling
 - **Smart Date Picker**: Calendar icon, ChevronDown icon, proper spacing, visual feedback for different due date states
 - **Date Format**: ISO 8601 format (YYYY-MM-DD) for backend compatibility
 - **Date Validation**: Restricts selection to reasonable date ranges (past year to 5 years future)
-- **Cross-View Integration**: Due dates display consistently across checklist, task dialogs, and data tables
+- **Cross-View Integration**: Due dates display consistently across checklist, task dialogs, data tables, and calendar view
 - **Automatic Calculations**: Days until due, overdue tracking, and status-based coloring
+- **Calendar View Integration**: Tasks organized by due date in monthly calendar grid with filtering capabilities
 - **Accessibility**: Keyboard navigation, screen reader support, and proper ARIA labels
 
 ### **Real-time Updates**
-- **Cross-View Synchronization**: Status changes and due date updates propagate instantly across Overview, Checklist, Graph, and Team views
+- **Cross-View Synchronization**: Status changes and due date updates propagate instantly across Overview, Checklist, Graph, Team, and Calendar views
 - **Automatic Calculations**: Summary statistics update live without manual refresh
-- **Visual Feedback**: Immediate color changes in graph nodes, dashboard cards, team progress, and due date indicators
-- **Assignment Tracking**: Task assignments instantly reflect in team member progress calculations
-- **Due Date Reactivity**: Due date changes immediately update visual indicators and task styling across all views
+- **Visual Feedback**: Immediate color changes in graph nodes, dashboard cards, team progress, calendar events, and due date indicators
+- **Assignment Tracking**: Task assignments instantly reflect in team member progress calculations and calendar display
+- **Due Date Reactivity**: Due date changes immediately update visual indicators and task styling across all views including calendar positioning
 
 ## Import Paths & Code Organization
 
@@ -514,6 +584,7 @@ const {
 ## Future Enhancements
 
 ### **Potential Features**
+- **Multi-Company Support**: Complete multi-tenant architecture with Supabase backend
 - **Real-time Collaboration**: WebSocket integration for multi-user editing
 - **Data Persistence**: Database integration for persistent task states
 - **Advanced Filtering**: Complex query builder for task management
@@ -521,28 +592,33 @@ const {
 - **Notifications**: Push notifications for task assignments and deadlines
 - **Team Expansion**: Support for larger teams and department hierarchies
 - **Role-Based Permissions**: Advanced access control and task visibility
+- **Company Onboarding**: Automated setup with customizable process templates
 
 ### **Technical Improvements**
-- **API Integration**: Backend API for data persistence and user management
-- **Offline Support**: Service worker for offline task management
-- **Advanced Analytics**: Detailed progress tracking and reporting
+- **Supabase Migration**: Multi-tenant database schema with company isolation, authentication, and real-time subscriptions
+- **API Integration**: RESTful backend API for data persistence and user management with company-scoped endpoints
+- **Authentication System**: User login with company association and role-based access control
+- **Data Migration Strategy**: Convert current static files to database schema with template-based company onboarding
+- **Offline Support**: Service worker for offline task management with sync capabilities
+- **Advanced Analytics**: Detailed progress tracking and reporting with company-level insights
 - **Mobile App**: React Native version for mobile task management
-- **Enterprise Features**: SSO integration, audit logs, advanced permissions
-- **Database Integration**: Supabase or similar backend for persistent team and task data
-- **Real-time Sync**: Live collaboration features for team task management
+- **Enterprise Features**: SSO integration, audit logs, advanced permissions, white-label branding
+- **Real-time Sync**: Live collaboration features for team task management with WebSocket integration
 
 ## Data Synchronization
 
 **Real-time Cross-View Updates**: Task status changes and due date updates propagate instantly across all views:
-- ✅ **Overview** ↔️ **Checklist** ↔️ **Graph** ↔️ **Team**
+- ✅ **Overview** ↔️ **Checklist** ↔️ **Graph** ↔️ **Team** ↔️ **Calendar**
 - Graph node colors change immediately when tasks are completed/updated in other views
-- Summary statistics update live across overview cards, checklist headers, and team progress
+- Calendar events update automatically when task status, assignments, or due dates change
+- Summary statistics update live across overview cards, checklist headers, team progress, and calendar monthly stats
 - Team member progress updates automatically when tasks are assigned or status changes
-- Task assignments and due dates reflect immediately in all views with proper name mapping
-- Due date visual indicators update instantly across task items, dialogs, and data tables
-- Active Tasks card shows real-time count of in_progress tasks across overview and checklist
-- Overdue task highlighting updates automatically based on current date calculations
-- Unified state ensures data consistency without manual refresh
+- Task assignments and due dates reflect immediately in all views with proper name mapping including calendar positioning
+- Due date visual indicators update instantly across task items, dialogs, data tables, and calendar events
+- Active Tasks card shows real-time count of in_progress tasks across overview, checklist, and calendar
+- Overdue task highlighting updates automatically based on current date calculations across all views
+- Calendar filtering responds instantly to task changes without requiring page refresh
+- Unified state ensures data consistency without manual refresh across all 5 views
 - **PERFORMANCE OPTIMIZED (2025)**: Selective re-rendering and strategic memoization eliminate unnecessary recreations
 
 **Key Performance Improvements**:

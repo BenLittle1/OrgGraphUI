@@ -20,6 +20,8 @@ export function SiteHeader() {
         return 'Graph'
       case '/team':
         return 'Team'
+      case '/calendar':
+        return 'Calendar'
       case '/settings':
         return 'Settings'
       default:
