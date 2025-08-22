@@ -16,6 +16,8 @@ export function SiteHeader() {
         return 'Overview'
       case '/checklist':
         return 'Checklist'
+      case '/my-tasks':
+        return 'My Tasks'
       case '/graph':
         return 'Graph'
       case '/team':

@@ -9,11 +9,12 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 **Core Features:**
 - **Overview**: Summary cards, interactive progress charts, high-priority task table, and chronological upcoming tasks view
 - **Checklist**: Filterable task management with real-time status updates, task assignment, due date management, and comprehensive task creation functionality
+- **My Tasks**: Personal task view with due date prioritization, smart grouping (overdue, today, this week, future), and comprehensive filtering
 - **Graph**: D3.js force-directed visualization with detailed node inspection
 - **Team**: Comprehensive team member management with full CRUD operations, progress tracking, and horizontal three-dot menus
 - **Calendar**: Monthly calendar view displaying tasks by due date with advanced filtering and task editing capabilities
 - **Due Date Management**: Complete task scheduling with visual indicators, overdue tracking, and dropdown calendar navigation
-- **Unified State**: Cross-view reactivity with instant data synchronization across all 5 views
+- **Unified State**: Cross-view reactivity with instant data synchronization across all 6 views
 - **Theme Support**: Persistent light/dark mode with comprehensive design tokens
 
 ## Technology Stack
@@ -52,6 +53,7 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 ├── app/                          # Next.js 14 app directory
 │   ├── calendar/page.tsx        # Calendar view with monthly task display and filtering
 │   ├── checklist/page.tsx       # Checklist view with filters and task assignment
+│   ├── my-tasks/page.tsx        # Personal task view with due date prioritization and smart grouping
 │   ├── graph/page.tsx           # Interactive graph visualization
 │   ├── team/page.tsx            # Team member management and progress tracking
 │   ├── globals.css              # CSS variables, theme tokens
@@ -91,6 +93,8 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 │   ├── date-picker.tsx          # Due date picker with visual indicators and calendar
 │   ├── graph-visualization.tsx   # D3.js force-directed graph
 │   ├── mode-toggle.tsx          # Dark/light theme toggle
+│   ├── my-tasks-header.tsx      # My Tasks view header with statistics and filtering controls
+│   ├── my-tasks-list.tsx        # Personal task list with due date grouping and smart organization
 │   ├── section-cards.tsx        # Overview summary statistics
 │   ├── site-header.tsx          # Top navigation bar
 │   ├── task-item.tsx            # Individual task component with assignment and due dates
@@ -140,13 +144,14 @@ npm run lint         # Run ESLint for code quality checks
 ## Data Architecture
 
 ### **Unified State Management**
-All views (Overview, Checklist, Graph, Team) share a single reactive data source via `DataContext` (`contexts/data-context.tsx`).
+All views (Overview, Checklist, My Tasks, Graph, Team, Calendar) share a single reactive data source via `DataContext` (`contexts/data-context.tsx`).
 
 **Data Flow Architecture:**
 1. **DataProvider** wraps the app in `app/layout.tsx`, providing reactive state management
 2. **All views use `useData()` hook** for consistent state access and updates
-3. **Cross-view reactivity**: Task status changes instantly update all views (overview statistics, checklist UI, graph node colors, team progress)
+3. **Cross-view reactivity**: Task status changes instantly update all views (overview statistics, checklist UI, personal task view, graph node colors, team progress, calendar events)
 4. **Team Integration**: Task assignments link business processes to team members with real-time progress tracking
+5. **Personal Task View**: `getCurrentUserTasks()` function provides user-specific task filtering with due date prioritization
 
 ### **Core Data Structure**
 The application uses two main data sources:
@@ -159,10 +164,14 @@ The application uses two main data sources:
 - **Current Status**: 8 completed, 6 in_progress, 80+ pending tasks (updates with new task creation)
 
 **Team Data** (`data/team-data.ts`):
-- **Team Members**: 4 core team members (CEO, CTO, CFO, VP Marketing)
-- **Task Assignments**: Mapping of team members to specific task IDs
+- **Team Members**: 3 core team members with startup-realistic responsibilities
+  - **Majeed Kazemi** (CEO): Business strategy, legal, financial oversight, strategic marketing (22 tasks)
+  - **Ali Shabani** (Senior Engineer): Technical architecture, development, financial systems, technical marketing (15 tasks)
+  - **Jack Fan** (Engineer): Frontend development, brand/content, user experience, operational tasks (11 tasks)
+- **Task Assignments**: Strategic distribution across business and technical functions reflecting early-stage startup dynamics
 - **Member Profiles**: Complete profiles with roles, departments, contact info, hire dates
 - **Progress Tracking**: Real-time calculation of individual member task completion
+- **Department Structure**: Executive and Engineering departments only (removed Finance/Marketing for realistic startup structure)
 
 ### **Current Architecture Limitations**
 
@@ -280,6 +289,8 @@ interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
 - `CategoryCombobox`: Searchable category selector with dynamic creation capability using shadcn Command component with fixed filtering logic
 - `SubcategoryCombobox`: Filtered subcategory selector with context-aware creation and proper category dependency, includes fixed Command filtering
 - `CategorySection`: Category display with contextual task creation buttons for specific subcategories
+- `MyTasksHeader`: Personal task view header with user-specific statistics, progress tracking, filtering controls, and overdue/due today alerts
+- `MyTasksList`: Intelligent task organization with due date grouping (overdue, today, this week, future, no due date), category context display, and full task management capabilities
 
 ### **Dynamic Category/Subcategory Creation System - RECENTLY IMPLEMENTED (2025)**
 
@@ -418,6 +429,46 @@ The calendar uses a sophisticated month-based layout with intelligent task organ
 - **Filtered Data Pipeline**: Multi-stage filtering system with early returns for performance
 - **Responsive Events**: Debounced month navigation and filter state management
 
+## My Tasks Personal View System
+
+### **Personal Task Management**
+The My Tasks view provides a focused, user-centric interface for managing assigned tasks with intelligent prioritization and organization:
+
+**Core Features**:
+- **Due Date Prioritization**: Tasks automatically sorted by urgency (overdue first, then by proximity to due date)
+- **Smart Grouping**: Logical organization into Overdue, Due Today, This Week, Future, and No Due Date categories
+- **User-Specific Filtering**: Only displays tasks assigned to the current user (currently simulated as "Ali Shabani")
+- **Context Preservation**: Shows category and subcategory information for each task to maintain organizational context
+- **Full Task Management**: Complete CRUD operations using existing TaskItem component for consistency
+
+### **Intelligent Task Organization**
+**MyTasksList Component Features**:
+- **Color-Coded Categories**: Visual distinction with themed icons (red for overdue, orange for today, blue for this week, etc.)
+- **Contextual Information**: Each task displays its category, subcategory, and due date for full context
+- **Empty State Handling**: Appropriate messaging when no tasks are assigned or visible
+- **Responsive Design**: Adaptive layout for different screen sizes with proper spacing and readability
+
+### **Comprehensive Statistics**
+**MyTasksHeader Component Analytics**:
+- **Progress Tracking**: Total tasks with completion percentage and visual progress bar
+- **Active Task Count**: Real-time count of in-progress tasks with blue accent
+- **Alert Metrics**: Conditional display of overdue (red) and due today (orange) task counts
+- **Completion Statistics**: Green-highlighted completed task count for positive reinforcement
+- **Filter Integration**: Search, status, and priority filtering with active filter indicators
+
+### **Future Database Integration**
+The My Tasks system is architected for seamless integration with user authentication:
+- **User Context**: `getCurrentUserTasks(userName)` function ready for authenticated user sessions
+- **Scalable Filtering**: Efficient task filtering designed for larger datasets
+- **Performance Optimized**: Memoized calculations and smart re-rendering for responsive user experience
+- **Cross-View Consistency**: All task changes immediately reflect across personal view and other system views
+
+### **User Experience Design**
+- **Priority Visual Cues**: Overdue and urgent tasks prominently highlighted with appropriate color coding
+- **Workflow Efficiency**: Quick access to task editing, status changes, and assignment modifications
+- **Information Density**: Balanced display of essential information without overwhelming the interface
+- **Accessibility Compliance**: Full keyboard navigation, screen reader support, and ARIA labeling
+
 ## Component Architecture
 
 ### **Layout Components**
@@ -476,14 +527,15 @@ Uses comprehensive CSS variables defined in `app/globals.css`:
 - **Task Creation System**: Full CRUD operations with automatic ID generation and real-time synchronization
 
 ### **Team Management - COMPREHENSIVE CRUD SYSTEM (2025)**
-- **Team Size**: 4+ core team members (expandable with full CRUD operations)
-- **Task Assignment**: Dynamic assignment system with real-time progress tracking
+- **Team Size**: 3 core team members (expandable with full CRUD operations)
+- **Task Assignment**: Dynamic assignment system with real-time progress tracking across business and technical functions
 - **Progress Calculation**: Weighted progress (completed=1.0, in_progress=0.5, pending=0.0)
 - **Avatar System**: Consistent avatar display across all components with proper sizing
-- **Department Organization**: Members organized by Executive, Engineering, Finance, Marketing (expandable with dynamic creation)
+- **Department Organization**: Members organized by Executive and Engineering departments (expandable with dynamic creation)
 - **Interactive Team Cards**: Clickable team member cards that open detailed task management modals
 - **Team Task Management**: Full task editing capabilities within team member details including status changes, due date updates, and assignment modifications
 - **Consistent UI Patterns**: Team details view uses identical task interaction patterns as checklist view (checkboxes, status dropdowns, horizontal three-dot menus)
+- **Startup-Realistic Structure**: Engineers handle both technical and business tasks, CEO manages strategic and financial oversight
 
 **Full CRUD Operations** (Recently Implemented):
 - **Add Team Members**: Comprehensive dialog with form validation, department creation, and all member fields
@@ -594,7 +646,8 @@ const {
   updateTeamMember,
   deleteTeamMember,
   getNextTeamMemberId,
-  addDepartment
+  addDepartment,
+  getCurrentUserTasks
 } = useData()
 ```
 
@@ -737,7 +790,7 @@ const {
 ## Data Synchronization
 
 **Real-time Cross-View Updates**: Task status changes and due date updates propagate instantly across all views:
-- ✅ **Overview** ↔️ **Checklist** ↔️ **Graph** ↔️ **Team** ↔️ **Calendar**
+- ✅ **Overview** ↔️ **Checklist** ↔️ **My Tasks** ↔️ **Graph** ↔️ **Team** ↔️ **Calendar**
 - Graph node colors change immediately when tasks are completed/updated in other views
 - Calendar events update automatically when task status, assignments, or due dates change
 - Summary statistics update live across overview cards, checklist headers, team progress, and calendar monthly stats

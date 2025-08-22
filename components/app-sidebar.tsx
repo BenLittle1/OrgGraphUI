@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Settings, Users, BarChart3, CheckSquare, Network, Zap, Calendar } from "lucide-react"
+import { Home, Settings, Users, BarChart3, CheckSquare, Network, Zap, Calendar, User } from "lucide-react"
 import { Sidebar } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 const navigation = [
   { name: "Overview", href: "/", icon: Home },
   { name: "Checklist", href: "/checklist", icon: CheckSquare },
+  { name: "My Tasks", href: "/my-tasks", icon: User },
   { name: "Graph", href: "/graph", icon: Network },
   { name: "Team", href: "/team", icon: Users },
   { name: "Calendar", href: "/calendar", icon: Calendar },

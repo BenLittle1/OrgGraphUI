@@ -101,6 +101,7 @@ interface DataContextType {
   deleteTeamMember: (memberId: string) => void
   getNextTeamMemberId: () => string
   addDepartment: (departmentName: string) => void
+  getCurrentUserTasks: (userName: string) => Array<Task & { category: string; subcategory: string }>
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -462,6 +463,44 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return teamData.members.filter(member => member.department === department)
   }, [])
 
+  const getCurrentUserTasks = useCallback((userName: string): Array<Task & { category: string; subcategory: string }> => {
+    const userTasks: Array<Task & { category: string; subcategory: string }> = []
+    
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        for (const task of subcategory.tasks) {
+          if (task.assignee === userName) {
+            userTasks.push({
+              ...task,
+              category: category.name,
+              subcategory: subcategory.name
+            })
+          }
+        }
+      }
+    }
+    
+    // Sort by due date: overdue first, then by proximity to due date, then no due date last
+    return userTasks.sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0
+      if (!a.dueDate) return 1
+      if (!b.dueDate) return -1
+      
+      const dateA = parseISO(a.dueDate)
+      const dateB = parseISO(b.dueDate)
+      const now = new Date()
+      
+      if (!isValid(dateA) && !isValid(dateB)) return 0
+      if (!isValid(dateA)) return 1
+      if (!isValid(dateB)) return -1
+      
+      const daysA = differenceInDays(dateA, now)
+      const daysB = differenceInDays(dateB, now)
+      
+      return daysA - daysB
+    })
+  }, [data.categories])
+
   const getNextTaskId = useCallback((): number => {
     let maxId = 0
     for (const category of data.categories) {
@@ -805,7 +844,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateTeamMember,
     deleteTeamMember,
     getNextTeamMemberId,
-    addDepartment
+    addDepartment,
+    getCurrentUserTasks
   }), [
     data,
     teamData,
@@ -843,7 +883,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateTeamMember,
     deleteTeamMember,
     getNextTeamMemberId,
-    addDepartment
+    addDepartment,
+    getCurrentUserTasks
   ])
 
   return (
