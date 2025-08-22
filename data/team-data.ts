@@ -49,19 +49,31 @@ export const teamData: TeamData = {
       hireDate: "2024-02-15",
       isActive: true,
       bio: "Full-stack engineer with strong frontend expertise and experience in user experience design. Passionate about building intuitive, performant applications."
+    },
+    {
+      id: "tm-004",
+      name: "Tovi Grossman",
+      role: "Chief Scientist",
+      email: "tovi.grossman@codeaid.com", 
+      department: "Research",
+      hireDate: "2024-03-01",
+      isActive: true,
+      bio: "Distinguished research scientist with expertise in human-computer interaction, AI/ML applications, and technology innovation. Previously Principal Scientist at Autodesk Research with 15+ years advancing the intersection of AI and user experience."
     }
   ],
   departments: [
     "Executive",
-    "Engineering"
+    "Engineering",
+    "Research"
   ],
-  totalMembers: 3,
-  activeMembers: 3
+  totalMembers: 4,
+  activeMembers: 4
 }
 
 // Task assignment mapping - connects team members to specific task IDs from data.json
 export const taskAssignments: Record<string, number[]> = {
-  "tm-001": [1, 2, 9, 89, 3, 4, 5, 6, 7, 8, 11, 52, 21, 22, 23, 24, 30, 31, 62, 63, 64, 65, 67, 74], // CEO: Business/Legal/Board + Critical Financial + Strategic Marketing
+  "tm-001": [1, 2, 9, 89, 3, 4, 5, 6, 7, 8, 11, 21, 22, 23, 24, 30, 31, 62, 63, 64, 65, 67, 74], // CEO: Business/Legal/Board + Critical Financial + Strategic Marketing
   "tm-002": [46, 47, 48, 49, 50, 51, 54, 55, 56, 26, 27, 28, 32, 69, 70], // Senior Engineer: Core Technical + Financial Processes + Technical Marketing
-  "tm-003": [60, 61, 71, 72, 75, 76, 25, 29, 68, 73, 77] // Engineer: Brand/Content + Remaining Financial + Additional Marketing
+  "tm-003": [60, 61, 71, 72, 75, 76, 25, 29, 68, 73, 77], // Engineer: Brand/Content + Remaining Financial + Additional Marketing
+  "tm-004": [45, 52, 53, 66, 43, 44, 13, 18, 19] // Chief Scientist: Research + IP Strategy + Data Management + Competitive Analysis + Product Strategy + Risk Assessment
 }

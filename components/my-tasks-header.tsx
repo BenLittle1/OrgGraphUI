@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, User, Clock, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { Search, User, Clock, AlertTriangle, CheckCircle2, Circle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -34,7 +34,7 @@ export function MyTasksHeader({
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(task => task.status === "completed").length
   const inProgressTasks = tasks.filter(task => task.status === "in_progress").length
-  const pendingTasks = tasks.filter(task => task.status === "pending").length
+  const highPriorityTasks = tasks.filter(task => task.priority === "high").length
   
   const completionPercentage = totalTasks > 0 
     ? Math.round((completedTasks / totalTasks) * 100)
@@ -83,6 +83,19 @@ export function MyTasksHeader({
               <div className="text-2xl font-bold text-blue-600">{inProgressTasks}</div>
               <p className="text-xs text-muted-foreground">
                 Active tasks
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">High Priority</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{highPriorityTasks}</div>
+              <p className="text-xs text-muted-foreground">
+                Urgent tasks
               </p>
             </CardContent>
           </Card>
