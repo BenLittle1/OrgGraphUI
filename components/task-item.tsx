@@ -5,11 +5,19 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger, 
+  DropdownMenuSeparator 
+} from "@/components/ui/dropdown-menu"
 import { AssigneeSelect } from "@/components/assignee-select"
 import { DatePicker } from "@/components/date-picker"
+import { EditTaskDialog } from "@/components/edit-task-dialog"
 import { Task } from "@/contexts/data-context"
-import { User, MoreHorizontal, Edit, Calendar, Clock, AlertTriangle } from "lucide-react"
+import { User, MoreHorizontal, Edit, Calendar, Clock, AlertTriangle, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format, isValid, parseISO, differenceInDays } from "date-fns"
 
@@ -18,10 +26,11 @@ interface TaskItemProps {
   updateTaskStatus: (taskId: number, newStatus: string) => void
   assignTaskToMember: (taskId: number, memberId: string | null) => void
   updateTaskDueDate: (taskId: number, dueDate: string | null) => void
+  deleteTask: (taskId: number) => void
 }
 
-export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTaskDueDate }: TaskItemProps) {
-  const [showDetails, setShowDetails] = useState(false)
+export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTaskDueDate, deleteTask }: TaskItemProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const handleStatusChange = (checked: boolean) => {
     const newStatus = checked ? "completed" : "pending"
@@ -120,6 +129,11 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTas
     updateTaskDueDate(task.id, newDueDate)
   }
 
+  const handleDeleteConfirm = () => {
+    deleteTask(task.id)
+    setShowDeleteConfirm(false)
+  }
+
   return (
     <div
       className={cn(
@@ -158,7 +172,7 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTas
             date={task.dueDate}
             onDateChange={handleDueDateChange}
             placeholder="Set due date"
-            className="h-6 text-xs min-w-[120px]"
+            className="!h-8 text-xs min-w-[120px]"
           />
           
           {/* Assignee */}
@@ -198,72 +212,69 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTas
           </SelectContent>
         </Select>
 
-        {/* Details Dialog */}
-        <Dialog open={showDetails} onOpenChange={setShowDetails}>
-          <DialogTrigger asChild>
+        {/* Task Actions Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
               <MoreHorizontal className="h-3 w-3" />
             </Button>
-          </DialogTrigger>
-          <DialogContent>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <EditTaskDialog task={task}>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Task
+              </DropdownMenuItem>
+            </EditTaskDialog>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              variant="destructive"
+              onSelect={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Task
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Edit className="h-4 w-4" />
-                Task Details
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                Delete Task
               </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this task? This action cannot be undone.
+              </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Task Name</label>
-                <p className="mt-1 text-sm">{task.name}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Priority</label>
-                  <div className="mt-1">
-                    <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                      {task.priority}
-                    </Badge>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Status</label>
-                  <div className="mt-1">
-                    <Badge variant="outline" className={getStatusColor(task.status)}>
-                      {task.status.replace("_", " ")}
-                    </Badge>
-                  </div>
+              <div className="bg-muted p-3 rounded-md">
+                <p className="font-medium text-sm">{task.name}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
+                    {task.priority}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">#{task.id}</span>
                 </div>
               </div>
               
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Assignee</label>
-                <div className="mt-1">
-                  <AssigneeSelect
-                    taskId={task.id}
-                    currentAssignee={task.assignee}
-                    assignTaskToMember={assignTaskToMember}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Due Date</label>
-                <div className="mt-1">
-                  <DatePicker
-                    date={task.dueDate}
-                    onDateChange={handleDueDateChange}
-                    placeholder="Set due date"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Task ID</label>
-                <p className="mt-1 text-sm text-muted-foreground">#{task.id}</p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteConfirm}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Task
+                </Button>
               </div>
             </div>
           </DialogContent>

@@ -8,9 +8,9 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 
 **Core Features:**
 - **Overview**: Summary cards, interactive progress charts, high-priority task table, and chronological upcoming tasks view
-- **Checklist**: Filterable task management with real-time status updates, task assignment, and due date management
+- **Checklist**: Filterable task management with real-time status updates, task assignment, due date management, and comprehensive task creation functionality
 - **Graph**: D3.js force-directed visualization with detailed node inspection
-- **Team**: Comprehensive team member management with progress tracking
+- **Team**: Comprehensive team member management with full CRUD operations, progress tracking, and horizontal three-dot menus
 - **Calendar**: Monthly calendar view displaying tasks by due date with advanced filtering and task editing capabilities
 - **Due Date Management**: Complete task scheduling with visual indicators, overdue tracking, and dropdown calendar navigation
 - **Unified State**: Cross-view reactivity with instant data synchronization across all 5 views
@@ -29,6 +29,7 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 - **Radix UI**: Accessible headless components (accordion, dialog, dropdown, etc.)
 - **Lucide React 0.294.0**: Consistent icon system
 - **next-themes 0.4.6**: Persistent theme management
+- **cmdk 1.1.1**: Command palette functionality for searchable comboboxes
 
 ### **Data Visualization**
 - **D3.js 7.9.0**: Force-directed graph simulation, data transformations
@@ -71,14 +72,21 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 │   │   ├── progress.tsx        # Progress indicators
 │   │   ├── select.tsx          # Dropdown selectors
 │   │   ├── sidebar.tsx         # Navigation sidebar
-│   │   └── table.tsx           # Data tables
+│   │   ├── table.tsx           # Data tables
+│   │   ├── textarea.tsx        # Multi-line text inputs for bios and descriptions
+│   │   └── command.tsx         # Searchable command palette component for comboboxes
+│   ├── add-task-dialog.tsx       # Task creation dialog with form validation, dynamic category/subcategory creation, and hierarchical selection
+│   ├── add-team-member-dialog.tsx # Team member creation dialog with comprehensive form validation and department management
+│   ├── edit-team-member-dialog.tsx # Team member editing dialog with pre-populated form and validation
+│   ├── category-combobox.tsx     # Dynamic category selection with creation capability using shadcn Command component
+│   ├── subcategory-combobox.tsx  # Dynamic subcategory selection filtered by category with creation capability
 │   ├── app-sidebar.tsx          # Navigation with active states
 │   ├── assignee-select.tsx      # Task assignment dropdown component
 │   ├── calendar-event.tsx       # Calendar task event component with editing capabilities
 │   ├── calendar-view.tsx        # Monthly calendar grid with task display and filtering
-│   ├── category-section.tsx     # Checklist category display
+│   ├── category-section.tsx     # Checklist category display with contextual add task buttons
 │   ├── chart-area-interactive.tsx # Overview progress charts
-│   ├── checklist-header.tsx     # Filters, search controls, and summary cards
+│   ├── checklist-header.tsx     # Filters, search controls, summary cards, and global add task button
 │   ├── data-table.tsx           # High-priority tasks table
 │   ├── date-picker.tsx          # Due date picker with visual indicators and calendar
 │   ├── graph-visualization.tsx   # D3.js force-directed graph
@@ -86,8 +94,8 @@ CodeAid is a sophisticated business process checklist dashboard built with Next.
 │   ├── section-cards.tsx        # Overview summary statistics
 │   ├── site-header.tsx          # Top navigation bar
 │   ├── task-item.tsx            # Individual task component with assignment and due dates
-│   ├── team-member-card.tsx     # Team member display card
-│   ├── team-member-detail.tsx   # Team member detail modal
+│   ├── team-member-card.tsx     # Team member display card with horizontal three-dot menu beside name
+│   ├── team-member-detail.tsx   # Team member detail modal with horizontal three-dot menu beside name
 │   └── theme-provider.tsx       # Theme context wrapper
 ├── contexts/
 │   └── data-context.tsx         # Unified reactive state management
@@ -145,9 +153,10 @@ The application uses two main data sources:
 
 **Business Process Data** (`data.json`):
 - **Categories**: 7 main business areas (Corporate & Governance, Finance & Accounting, HR, Product/Tech, Go-To-Market, Sales/Customer Success, Fundraising)
-- **Subcategories**: 20 functional areas within categories
-- **Tasks**: 93 individual business process items with status, priority, and assignee fields
-- **Current Status**: 8 completed, 6 in_progress, 79 pending tasks
+- **Subcategories**: 20+ functional areas within categories (expandable with dynamic creation)
+- **Tasks**: 94+ individual business process items with status, priority, and assignee fields (dynamic with task creation)
+- **Task Creation**: Full task creation capability with automatic ID generation and cross-view synchronization
+- **Current Status**: 8 completed, 6 in_progress, 80+ pending tasks (updates with new task creation)
 
 **Team Data** (`data/team-data.ts`):
 - **Team Members**: 4 core team members (CEO, CTO, CFO, VP Marketing)
@@ -215,11 +224,24 @@ interface TeamMember {
   hireDate: string
   avatarUrl: string | null
   isActive: boolean
+  bio?: string
 }
 
 interface TeamData {
   members: TeamMember[]
   departments: string[]
+  totalMembers: number
+  activeMembers: number
+}
+
+interface NewTeamMemberData {
+  name: string
+  role: string
+  email: string
+  department: string
+  hireDate: string
+  bio?: string
+  avatarUrl?: string
 }
 ```
 
@@ -253,7 +275,51 @@ interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
 - `AssigneeSelect`: Provides task assignment functionality with team member selection
 - `DatePicker`: Task due date management with visual indicators and calendar integration
 - `TaskItem`: Complete task management including status, assignment, and due date updates
-- `ChecklistHeader`: Displays summary cards including in-progress task tracking
+- `ChecklistHeader`: Displays summary cards including in-progress task tracking and global task creation
+- `AddTaskDialog`: Comprehensive task creation dialog with form validation, dynamic category/subcategory creation, hierarchical selection, and cross-view synchronization
+- `CategoryCombobox`: Searchable category selector with dynamic creation capability using shadcn Command component with fixed filtering logic
+- `SubcategoryCombobox`: Filtered subcategory selector with context-aware creation and proper category dependency, includes fixed Command filtering
+- `CategorySection`: Category display with contextual task creation buttons for specific subcategories
+
+### **Dynamic Category/Subcategory Creation System - RECENTLY IMPLEMENTED (2025)**
+
+**Problem Identified**: The "Create new category/subcategory" options were not appearing when users typed non-matching names in the combobox dropdowns, despite the creation logic being implemented.
+
+**Root Cause**: The shadcn Command component's automatic filtering (`shouldFilter={true}` by default) was interfering with the custom create option logic by filtering out the "Create new..." options before they could be displayed.
+
+**Solution Applied** to both `CategoryCombobox` and `SubcategoryCombobox` (`components/category-combobox.tsx:91` and `components/subcategory-combobox.tsx:110`):
+
+1. **Disabled Automatic Filtering**: Added `shouldFilter={false}` to Command components
+2. **Implemented Manual Filtering**: Used controlled input with `value={searchValue}` and `onValueChange={setSearchValue}`
+3. **Fixed Create Option Logic**: Changed `showCreateOption` to check against full arrays (`categories`/`subcategories`) instead of filtered arrays
+4. **Maintained Custom Filtering**: Used `filteredCategories`/`filteredSubcategories` for display while preserving create functionality
+
+**Technical Implementation**:
+```typescript
+// Before (broken):
+<Command> // shouldFilter={true} by default
+  <CommandInput placeholder="..." />
+  {categories.map(...)} // All categories always shown
+  {showCreateOption && ...} // Checked filteredCategories
+
+// After (working):
+<Command shouldFilter={false}>
+  <CommandInput 
+    value={searchValue} 
+    onValueChange={setSearchValue} 
+  />
+  {filteredCategories.map(...)} // Manual filtering
+  {showCreateOption && ...} // Checks full categories array
+```
+
+**Verification Results**:
+- ✅ **Category Creation**: "New Test Category" successfully created and persisted
+- ✅ **Subcategory Creation**: "New Test Subcategory" successfully created under parent category
+- ✅ **Data Persistence**: Both appear in subsequent dropdown selections with accurate counts
+- ✅ **Hierarchical Relationships**: Subcategories properly linked to parent categories
+- ✅ **Cross-View Updates**: New structures immediately available across all 5 views
+
+**User Experience Impact**: Users can now seamlessly expand the organizational structure by typing new category or subcategory names directly in the task creation dialog, with immediate visual feedback and persistent data storage.
 
 ## Graph Visualization System
 
@@ -402,21 +468,33 @@ Uses comprehensive CSS variables defined in `app/globals.css`:
 ## Task Management & Team System
 
 ### **Business Process Data**
-- **Total Tasks**: 93 individual business process items
+- **Total Tasks**: 94+ individual business process items (expandable with task creation)
 - **Categories**: 7 main business areas
-- **Subcategories**: 20 functional areas
-- **Priority Distribution**: High (42 tasks), Medium (35), Low (16)
-- **Current Status**: 8 completed, 6 in_progress, 79 pending tasks
+- **Subcategories**: 20+ functional areas (expandable with dynamic creation)
+- **Priority Distribution**: High (42+ tasks), Medium (35+ tasks), Low (16+ tasks) - updates with new task creation
+- **Current Status**: 8 completed, 6 in_progress, 80+ pending tasks (dynamic with task creation)
+- **Task Creation System**: Full CRUD operations with automatic ID generation and real-time synchronization
 
-### **Team Management**
-- **Team Size**: 4 core team members (CEO, CTO, CFO, VP Marketing)
+### **Team Management - COMPREHENSIVE CRUD SYSTEM (2025)**
+- **Team Size**: 4+ core team members (expandable with full CRUD operations)
 - **Task Assignment**: Dynamic assignment system with real-time progress tracking
 - **Progress Calculation**: Weighted progress (completed=1.0, in_progress=0.5, pending=0.0)
 - **Avatar System**: Consistent avatar display across all components with proper sizing
-- **Department Organization**: Members organized by Executive, Engineering, Finance, Marketing
+- **Department Organization**: Members organized by Executive, Engineering, Finance, Marketing (expandable with dynamic creation)
 - **Interactive Team Cards**: Clickable team member cards that open detailed task management modals
 - **Team Task Management**: Full task editing capabilities within team member details including status changes, due date updates, and assignment modifications
-- **Consistent UI Patterns**: Team details view uses identical task interaction patterns as checklist view (checkboxes, status dropdowns, three-dot menus)
+- **Consistent UI Patterns**: Team details view uses identical task interaction patterns as checklist view (checkboxes, status dropdowns, horizontal three-dot menus)
+
+**Full CRUD Operations** (Recently Implemented):
+- **Add Team Members**: Comprehensive dialog with form validation, department creation, and all member fields
+- **Edit Team Members**: Pre-populated form for updating existing member information with validation
+- **Delete Team Members**: Safe deletion with confirmation dialogs and automatic task unassignment
+- **Dynamic Departments**: Users can create new departments on-the-fly during member creation/editing
+- **Reactive State**: All team operations immediately reflect across all views with updated statistics
+- **Horizontal Three-Dot Menus**: Edit/delete options accessible beside member names in both cards and detail popups
+- **Auto-ID Generation**: Unique team member IDs in format `tm-XXX` with automatic incrementing
+- **Form Validation**: Comprehensive client-side validation with real-time error messaging and character limits
+- **Data Persistence**: All changes persist in reactive state management with cross-view synchronization
 
 ### **Status Management**
 - **Status Options**: `pending`, `in_progress`, `completed`
@@ -435,12 +513,51 @@ Uses comprehensive CSS variables defined in `app/globals.css`:
 - **Calendar View Integration**: Tasks organized by due date in monthly calendar grid with filtering capabilities
 - **Accessibility**: Keyboard navigation, screen reader support, and proper ARIA labels
 
+### **Task Creation System**
+The application features comprehensive task creation capabilities with two distinct entry points:
+
+**Global Task Creation** (`ChecklistHeader`):
+- **Prominent Add Task Button**: Located in the search & filter header section
+- **Universal Access**: Available from any subcategory context
+- **Complete Form**: Full task creation dialog with all available subcategories
+
+**Contextual Task Creation** (`CategorySection`):
+- **Subcategory-Specific Buttons**: "Add task to [Subcategory Name]" buttons within each subcategory
+- **Smart Preselection**: Automatically preselects the correct subcategory in the dialog
+- **Streamlined Workflow**: Reduces user clicks by pre-filling subcategory context
+
+**AddTaskDialog Features**:
+- **Hierarchical Selection**: Category-first, then subcategory workflow with proper filtering and dependency management
+- **Dynamic Creation**: Users can create new categories and subcategories on-the-fly by typing in combobox fields
+- **Searchable Comboboxes**: shadcn Command components provide search functionality with "Create new..." options that appear when typing non-matching names
+- **Fixed Command Filtering**: Disabled automatic Command filtering (`shouldFilter={false}`) to prevent interference with custom create logic
+- **Controlled Input State**: Manual filtering implementation with controlled search value for proper "Create new" option visibility
+- **Form Validation**: Required fields (name, category, subcategory, priority) with client-side validation
+- **Character Limits**: Task name limited to 100 characters with real-time counter
+- **Priority Selection**: High/Medium/Low priority with visual color indicators
+- **Optional Fields**: Assignee selection and due date picker
+- **Smart Preselection**: Contextual task creation buttons pre-fill appropriate category/subcategory
+- **Error Handling**: Comprehensive error messaging and visual feedback
+- **Accessibility**: Full ARIA support, DialogDescription, and keyboard navigation
+- **Cross-View Sync**: New tasks and categories immediately appear across all 5 views with updated statistics
+- **Verified Data Persistence**: New categories and subcategories are properly persisted in underlying data structure with accurate counts and hierarchical relationships
+
+**Implementation Details**:
+- **Automatic ID Generation**: `getNextTaskId()`, `getNextCategoryId()`, and `getNextSubcategoryId()` ensure unique IDs across all data structures
+- **Dynamic Structure Expansion**: `addCategory()` and `addSubcategory()` functions create new organizational structures
+- **Hierarchical Data Management**: Categories contain subcategories, maintaining proper parent-child relationships
+- **Subcategory Access**: `getAllSubcategories()` provides flat list for dropdown selection across all categories
+- **State Management**: `addTask()`, `addCategory()`, and `addSubcategory()` functions handle insertion and trigger reactive updates
+- **Type Safety**: Full TypeScript interface compliance with `NewTaskData` structure and category/subcategory types
+
 ### **Real-time Updates**
-- **Cross-View Synchronization**: Status changes and due date updates propagate instantly across Overview, Checklist, Graph, Team, and Calendar views
-- **Automatic Calculations**: Summary statistics update live without manual refresh
+- **Cross-View Synchronization**: Status changes, task creation, category/subcategory creation, and due date updates propagate instantly across Overview, Checklist, Graph, Team, and Calendar views
+- **Automatic Calculations**: Summary statistics update live without manual refresh including task count increases
 - **Visual Feedback**: Immediate color changes in graph nodes, dashboard cards, team progress, calendar events, and due date indicators
 - **Assignment Tracking**: Task assignments instantly reflect in team member progress calculations and calendar display
 - **Due Date Reactivity**: Due date changes immediately update visual indicators and task styling across all views including calendar positioning
+- **Task Creation Synchronization**: New tasks appear instantly in graph visualization, team views, and calendar positioning with proper categorization
+- **Dynamic Structure Updates**: New categories and subcategories immediately appear in all dropdown selections, graph nodes, and organizational displays across all views
 
 ## Import Paths & Code Organization
 
@@ -463,9 +580,21 @@ const {
   updateTaskStatus, 
   assignTaskToMember,
   updateTaskDueDate,
+  addTask,
+  addCategory,
+  addSubcategory,
+  getNextTaskId,
+  getNextCategoryId,
+  getNextSubcategoryId,
+  getAllSubcategories,
   getTaskById,
   getMemberProgress,
-  getTasksForMember 
+  getTasksForMember,
+  addTeamMember,
+  updateTeamMember,
+  deleteTeamMember,
+  getNextTeamMemberId,
+  addDepartment
 } = useData()
 ```
 
@@ -618,6 +747,7 @@ const {
 - Active Tasks card shows real-time count of in_progress tasks across overview, checklist, and calendar
 - Overdue task highlighting updates automatically based on current date calculations across all views
 - Calendar filtering responds instantly to task changes without requiring page refresh
+- Dynamic category/subcategory creation immediately appears in all dropdown selections and organizational displays
 - Unified state ensures data consistency without manual refresh across all 5 views
 - **PERFORMANCE OPTIMIZED (2025)**: Selective re-rendering and strategic memoization eliminate unnecessary recreations
 

@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TeamMemberCard } from "@/components/team-member-card"
 import { TeamMemberDetail } from "@/components/team-member-detail"
+import { AddTeamMemberDialog } from "@/components/add-team-member-dialog"
 import { useData } from "@/contexts/data-context"
 import { TeamMember } from "@/data/team-data"
-import { Users, Search, Filter, TrendingUp } from "lucide-react"
+import { Users, Search, Filter, TrendingUp, Plus } from "lucide-react"
 
 export default function TeamPage() {
   const { teamData, getActiveMemberCount } = useData()
@@ -87,10 +88,18 @@ export default function TeamPage() {
               {/* Search and Filter Controls */}
               <Card className="mb-6">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Filter className="h-5 w-5" />
-                    <span>Search & Filter</span>
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Filter className="h-5 w-5" />
+                      <span>Search & Filter</span>
+                    </CardTitle>
+                    <AddTeamMemberDialog>
+                      <Button className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Team Member
+                      </Button>
+                    </AddTeamMemberDialog>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col md:flex-row gap-4">

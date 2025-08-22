@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useData } from "@/contexts/data-context"
 import { User } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface AssigneeSelectProps {
   taskId: number
@@ -45,7 +46,10 @@ export function AssigneeSelect({ taskId, currentAssignee, assignTaskToMember }: 
       open={isOpen}
       onOpenChange={setIsOpen}
     >
-      <SelectTrigger className="h-7 w-auto min-w-0 border-none shadow-none bg-transparent p-1 hover:bg-accent/50 transition-colors">
+      <SelectTrigger className={cn(
+        "h-8 min-w-[120px] justify-between font-normal pl-3 pr-2 py-1.5 hover:bg-accent/50 text-xs",
+        !currentAssignee && "text-muted-foreground border-dashed"
+      )}>
         <SelectValue asChild>
           <div className="flex items-center gap-1.5">
             {currentMember ? (

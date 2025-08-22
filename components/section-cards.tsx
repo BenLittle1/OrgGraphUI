@@ -32,6 +32,12 @@ export function SectionCards() {
     ? Math.round((completedCategories / data.categories.length) * 100)
     : 0
 
+  // Calculate active tasks progress (in_progress relative to incomplete tasks)
+  const incompleteTasks = data.summary.statusCounts.pending + data.summary.statusCounts.in_progress
+  const activeTasksPercentage = incompleteTasks > 0 
+    ? Math.round((data.summary.statusCounts.in_progress / incompleteTasks) * 100)
+    : 0
+
   const stats = [
     { 
       name: "Overall Progress", 
@@ -65,7 +71,8 @@ export function SectionCards() {
       icon: Activity, 
       change: "currently in progress",
       color: "text-blue-600",
-      isProgress: false
+      isProgress: true,
+      isActiveProgress: true
     },
   ]
 
@@ -94,6 +101,14 @@ export function SectionCards() {
                     <Progress value={categoryCompletionPercentage} className="h-2 bg-blue-100 [&>div]:bg-blue-500" />
                     <p className="text-xs text-muted-foreground mt-2">
                       {completedCategories} of {data.categories.length} categories completed
+                    </p>
+                  </>
+                ) : stat.isActiveProgress ? (
+                  <>
+                    <div className="text-2xl font-bold mb-2 text-blue-600">{activeTasksPercentage}%</div>
+                    <Progress value={activeTasksPercentage} className="h-2 bg-blue-100 [&>div]:bg-blue-500" />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {data.summary.statusCounts.in_progress} of {incompleteTasks} incomplete tasks
                     </p>
                   </>
                 ) : (

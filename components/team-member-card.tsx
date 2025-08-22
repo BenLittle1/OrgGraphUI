@@ -1,13 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { EditTeamMemberDialog } from "@/components/edit-team-member-dialog"
 import { useData } from "@/contexts/data-context"
 import { TeamMember } from "@/data/team-data"
-import { Mail, Calendar, CheckCircle, Clock, AlertTriangle } from "lucide-react"
+import { Mail, Calendar, CheckCircle, Clock, AlertTriangle, MoreHorizontal, Edit, Trash2 } from "lucide-react"
 
 interface TeamMemberCardProps {
   member: TeamMember
@@ -15,7 +18,8 @@ interface TeamMemberCardProps {
 }
 
 export function TeamMemberCard({ member, onViewDetails }: TeamMemberCardProps) {
-  const { getMemberProgress, getTasksForMember } = useData()
+  const { getMemberProgress, getTasksForMember, deleteTeamMember } = useData()
+  const [showEditDialog, setShowEditDialog] = useState(false)
   
   const progress = getMemberProgress(member.id)
   const memberTasks = getTasksForMember(member.id)
@@ -76,6 +80,22 @@ export function TeamMemberCard({ member, onViewDetails }: TeamMemberCardProps) {
     onViewDetails(member)
   }
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowEditDialog(true)
+  }
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (window.confirm(`Are you sure you want to remove ${member.name} from the team? This will unassign all their tasks.`)) {
+      deleteTeamMember(member.id)
+    }
+  }
+
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click when menu is clicked
+  }
+
   return (
     <Card 
       className="transition-all hover:shadow-lg hover:scale-[1.02] cursor-pointer group"
@@ -91,9 +111,37 @@ export function TeamMemberCard({ member, onViewDetails }: TeamMemberCardProps) {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base truncate group-hover:text-primary transition-colors">
-                {member.name}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-base truncate group-hover:text-primary transition-colors">
+                  {member.name}
+                </h3>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={handleMenuClick}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleEdit}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handleDelete}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Remove
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               <p className="text-sm text-muted-foreground truncate">
                 {member.role}
               </p>
@@ -176,6 +224,13 @@ export function TeamMemberCard({ member, onViewDetails }: TeamMemberCardProps) {
           View Details
         </Button>
       </CardContent>
+
+      {/* Edit Team Member Dialog */}
+      <EditTeamMemberDialog
+        member={showEditDialog ? member : null}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+      />
     </Card>
   )
 }

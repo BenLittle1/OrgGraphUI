@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react"
 import { parseISO, isValid, differenceInDays } from "date-fns"
 import initialData from "@/data.json"
-import { teamData, taskAssignments, TeamMember, TeamData } from "@/data/team-data"
+import { teamData as initialTeamData, taskAssignments, TeamMember, TeamData } from "@/data/team-data"
 
 export interface Task {
   id: number
@@ -46,6 +46,23 @@ export interface ChecklistData {
   }
 }
 
+export interface NewTaskData {
+  name: string
+  priority: "high" | "medium" | "low"
+  assignee?: string | null
+  dueDate?: string | null
+}
+
+export interface NewTeamMemberData {
+  name: string
+  role: string
+  email: string
+  department: string
+  hireDate: string
+  bio?: string
+  avatarUrl?: string
+}
+
 interface DataContextType {
   data: ChecklistData
   teamData: TeamData
@@ -53,6 +70,8 @@ interface DataContextType {
   updateTaskAssignee: (taskId: number, assignee: string | null) => void
   updateTaskPriority: (taskId: number, priority: string) => void
   updateTaskDueDate: (taskId: number, dueDate: string | null) => void
+  updateTaskName: (taskId: number, name: string) => void
+  deleteTask: (taskId: number) => void
   getTaskById: (taskId: number) => Task | null
   getCategoryProgress: (categoryId: number) => number
   getHighPriorityTasks: (limit?: number) => Array<Task & { category: string; subcategory: string }>
@@ -66,11 +85,30 @@ interface DataContextType {
   getTeamMembers: () => TeamMember[]
   getActiveMemberCount: () => number
   getMembersByDepartment: (department: string) => TeamMember[]
+  addTask: (subcategoryId: number, taskData: NewTaskData) => void
+  getNextTaskId: () => number
+  getAllSubcategories: () => Array<{id: number, name: string, categoryName: string}>
+  addCategory: (name: string) => number
+  addSubcategory: (categoryId: number, name: string) => number
+  getNextCategoryId: () => number
+  getNextSubcategoryId: () => number
+  updateCategoryName: (categoryId: number, name: string) => void
+  deleteCategory: (categoryId: number) => void
+  updateSubcategoryName: (subcategoryId: number, name: string) => void
+  deleteSubcategory: (subcategoryId: number) => void
+  addTeamMember: (memberData: NewTeamMemberData) => string
+  updateTeamMember: (memberId: string, memberData: Partial<NewTeamMemberData>) => void
+  deleteTeamMember: (memberId: string) => void
+  getNextTeamMemberId: () => string
+  addDepartment: (departmentName: string) => void
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
+  // Initialize reactive team data
+  const [teamData, setTeamData] = useState<TeamData>(initialTeamData)
+  
   // Initialize data with task assignments from team data
   const initializeDataWithAssignments = (): ChecklistData => {
     const baseData = initialData as ChecklistData
@@ -202,6 +240,42 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           tasks: subcategory.tasks.map(task =>
             task.id === taskId ? { ...task, dueDate } : task
           )
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const updateTaskName = useCallback((taskId: number, name: string) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task =>
+            task.id === taskId ? { ...task, name: name.trim() } : task
+          )
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const deleteTask = useCallback((taskId: number) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.filter(task => task.id !== taskId)
         }))
       }))
       
@@ -388,6 +462,312 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return teamData.members.filter(member => member.department === department)
   }, [])
 
+  const getNextTaskId = useCallback((): number => {
+    let maxId = 0
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        for (const task of subcategory.tasks) {
+          if (task.id > maxId) {
+            maxId = task.id
+          }
+        }
+      }
+    }
+    return maxId + 1
+  }, [data.categories])
+
+  const getAllSubcategories = useCallback(() => {
+    const allSubcategories: Array<{id: number, name: string, categoryName: string}> = []
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        allSubcategories.push({
+          id: subcategory.id,
+          name: subcategory.name,
+          categoryName: category.name
+        })
+      }
+    }
+    return allSubcategories
+  }, [data.categories])
+
+  const addTask = useCallback((subcategoryId: number, taskData: NewTaskData) => {
+    const newTaskId = getNextTaskId()
+    const newTask: Task = {
+      id: newTaskId,
+      name: taskData.name,
+      status: "pending",
+      priority: taskData.priority,
+      assignee: taskData.assignee || null,
+      dueDate: taskData.dueDate || null
+    }
+
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => {
+          if (subcategory.id === subcategoryId) {
+            return {
+              ...subcategory,
+              tasks: [...subcategory.tasks, newTask]
+            }
+          }
+          return subcategory
+        })
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [getNextTaskId, recalculateSummary])
+
+  const getNextCategoryId = useCallback((): number => {
+    let maxId = 0
+    for (const category of data.categories) {
+      if (category.id > maxId) {
+        maxId = category.id
+      }
+    }
+    return maxId + 1
+  }, [data.categories])
+
+  const getNextSubcategoryId = useCallback((): number => {
+    let maxId = 0
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        if (subcategory.id > maxId) {
+          maxId = subcategory.id
+        }
+      }
+    }
+    return maxId + 1
+  }, [data.categories])
+
+  const addCategory = useCallback((name: string): number => {
+    const newCategoryId = getNextCategoryId()
+    const newCategory: Category = {
+      id: newCategoryId,
+      name: name.trim(),
+      totalTasks: 0,
+      subcategories: []
+    }
+
+    setData(prev => {
+      const newCategories = [...prev.categories, newCategory]
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+
+    return newCategoryId
+  }, [getNextCategoryId, recalculateSummary])
+
+  const addSubcategory = useCallback((categoryId: number, name: string): number => {
+    const newSubcategoryId = getNextSubcategoryId()
+    const newSubcategory: Subcategory = {
+      id: newSubcategoryId,
+      name: name.trim(),
+      tasks: []
+    }
+
+    setData(prev => {
+      const newCategories = prev.categories.map(category => {
+        if (category.id === categoryId) {
+          return {
+            ...category,
+            subcategories: [...category.subcategories, newSubcategory]
+          }
+        }
+        return category
+      })
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+
+    return newSubcategoryId
+  }, [getNextSubcategoryId, recalculateSummary])
+
+  const updateCategoryName = useCallback((categoryId: number, name: string) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category =>
+        category.id === categoryId ? { ...category, name: name.trim() } : category
+      )
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const deleteCategory = useCallback((categoryId: number) => {
+    setData(prev => {
+      const newCategories = prev.categories.filter(category => category.id !== categoryId)
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const updateSubcategoryName = useCallback((subcategoryId: number, name: string) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory =>
+          subcategory.id === subcategoryId ? { ...subcategory, name: name.trim() } : subcategory
+        )
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const deleteSubcategory = useCallback((subcategoryId: number) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.filter(subcategory => subcategory.id !== subcategoryId)
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  // Team member management functions
+  const getNextTeamMemberId = useCallback((): string => {
+    const existingIds = teamData.members.map(member => member.id)
+    let nextNumber = 1
+    let newId = `tm-${String(nextNumber).padStart(3, '0')}`
+    
+    while (existingIds.includes(newId)) {
+      nextNumber++
+      newId = `tm-${String(nextNumber).padStart(3, '0')}`
+    }
+    
+    return newId
+  }, [teamData.members])
+
+  const addTeamMember = useCallback((memberData: NewTeamMemberData): string => {
+    const newMemberId = getNextTeamMemberId()
+    const newMember: TeamMember = {
+      id: newMemberId,
+      name: memberData.name.trim(),
+      role: memberData.role.trim(),
+      email: memberData.email.trim(),
+      department: memberData.department,
+      hireDate: memberData.hireDate,
+      isActive: true,
+      bio: memberData.bio?.trim() || undefined,
+      avatarUrl: memberData.avatarUrl || undefined
+    }
+
+    setTeamData(prev => {
+      const newMembers = [...prev.members, newMember]
+      const newDepartments = prev.departments.includes(memberData.department) 
+        ? prev.departments 
+        : [...prev.departments, memberData.department]
+      
+      return {
+        members: newMembers,
+        departments: newDepartments,
+        totalMembers: newMembers.length,
+        activeMembers: newMembers.filter(m => m.isActive).length
+      }
+    })
+
+    return newMemberId
+  }, [getNextTeamMemberId])
+
+  const updateTeamMember = useCallback((memberId: string, memberData: Partial<NewTeamMemberData>) => {
+    setTeamData(prev => {
+      const newMembers = prev.members.map(member => {
+        if (member.id === memberId) {
+          return {
+            ...member,
+            ...(memberData.name && { name: memberData.name.trim() }),
+            ...(memberData.role && { role: memberData.role.trim() }),
+            ...(memberData.email && { email: memberData.email.trim() }),
+            ...(memberData.department && { department: memberData.department }),
+            ...(memberData.hireDate && { hireDate: memberData.hireDate }),
+            ...(memberData.bio !== undefined && { bio: memberData.bio?.trim() || undefined }),
+            ...(memberData.avatarUrl !== undefined && { avatarUrl: memberData.avatarUrl || undefined })
+          }
+        }
+        return member
+      })
+      
+      // Update departments list if a new department was added
+      const allDepartments = new Set([...prev.departments, ...newMembers.map(m => m.department)])
+      
+      return {
+        members: newMembers,
+        departments: Array.from(allDepartments),
+        totalMembers: newMembers.length,
+        activeMembers: newMembers.filter(m => m.isActive).length
+      }
+    })
+  }, [])
+
+  const deleteTeamMember = useCallback((memberId: string) => {
+    setTeamData(prev => {
+      const newMembers = prev.members.map(member => 
+        member.id === memberId ? { ...member, isActive: false } : member
+      )
+      
+      return {
+        ...prev,
+        members: newMembers,
+        activeMembers: newMembers.filter(m => m.isActive).length
+      }
+    })
+
+    // Also unassign all tasks from this member
+    const memberToDelete = teamData.members.find(m => m.id === memberId)
+    if (memberToDelete) {
+      setData(prev => {
+        const newCategories = prev.categories.map(category => ({
+          ...category,
+          subcategories: category.subcategories.map(subcategory => ({
+            ...subcategory,
+            tasks: subcategory.tasks.map(task => 
+              task.assignee === memberToDelete.name ? { ...task, assignee: null } : task
+            )
+          }))
+        }))
+        
+        return {
+          categories: newCategories,
+          summary: recalculateSummary(newCategories)
+        }
+      })
+    }
+  }, [teamData.members, recalculateSummary])
+
+  const addDepartment = useCallback((departmentName: string) => {
+    setTeamData(prev => {
+      if (!prev.departments.includes(departmentName)) {
+        return {
+          ...prev,
+          departments: [...prev.departments, departmentName]
+        }
+      }
+      return prev
+    })
+  }, [])
+
   const value: DataContextType = useMemo(() => ({
     data,
     teamData,
@@ -395,6 +775,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateTaskAssignee,
     updateTaskPriority,
     updateTaskDueDate,
+    updateTaskName,
+    deleteTask,
     getTaskById,
     getCategoryProgress,
     getHighPriorityTasks,
@@ -407,13 +789,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     assignTaskToMember,
     getTeamMembers,
     getActiveMemberCount,
-    getMembersByDepartment
+    getMembersByDepartment,
+    addTask,
+    getNextTaskId,
+    getAllSubcategories,
+    addCategory,
+    addSubcategory,
+    getNextCategoryId,
+    getNextSubcategoryId,
+    updateCategoryName,
+    deleteCategory,
+    updateSubcategoryName,
+    deleteSubcategory,
+    addTeamMember,
+    updateTeamMember,
+    deleteTeamMember,
+    getNextTeamMemberId,
+    addDepartment
   }), [
     data,
+    teamData,
     updateTaskStatus,
     updateTaskAssignee,
     updateTaskPriority,
     updateTaskDueDate,
+    updateTaskName,
+    deleteTask,
     getTaskById,
     getCategoryProgress,
     getHighPriorityTasks,
@@ -426,7 +827,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     assignTaskToMember,
     getTeamMembers,
     getActiveMemberCount,
-    getMembersByDepartment
+    getMembersByDepartment,
+    addTask,
+    getNextTaskId,
+    getAllSubcategories,
+    addCategory,
+    addSubcategory,
+    getNextCategoryId,
+    getNextSubcategoryId,
+    updateCategoryName,
+    deleteCategory,
+    updateSubcategoryName,
+    deleteSubcategory,
+    addTeamMember,
+    updateTeamMember,
+    deleteTeamMember,
+    getNextTeamMemberId,
+    addDepartment
   ])
 
   return (

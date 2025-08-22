@@ -1,11 +1,13 @@
 "use client"
 
-import { Search, Activity } from "lucide-react"
+import { Search, Activity, Plus } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Button } from "@/components/ui/button"
+import { AddTaskDialog } from "@/components/add-task-dialog"
 import { ChecklistData } from "@/contexts/data-context"
 
 interface ChecklistHeaderProps {
@@ -55,6 +57,12 @@ export function ChecklistHeader({
     ? Math.round((completedCategories / data.categories.length) * 100)
     : 0
 
+  // Calculate active tasks progress (in_progress relative to incomplete tasks)
+  const incompleteTasks = data.summary.statusCounts.pending + data.summary.statusCounts.in_progress
+  const activeTasksPercentage = incompleteTasks > 0 
+    ? Math.round((data.summary.statusCounts.in_progress / incompleteTasks) * 100)
+    : 0
+
   return (
     <div className="px-4 lg:px-6 space-y-6">
       {/* Summary Cards */}
@@ -101,12 +109,12 @@ export function ChecklistHeader({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.summary.statusCounts.in_progress}</div>
-            <p className="text-xs text-muted-foreground">
-              currently in progress
+            <div className="text-2xl font-bold mb-2 text-blue-600">{activeTasksPercentage}%</div>
+            <Progress value={activeTasksPercentage} className="h-2 bg-blue-100 [&>div]:bg-blue-500" />
+            <p className="text-xs text-muted-foreground mt-2">
+              {data.summary.statusCounts.in_progress} of {incompleteTasks} incomplete tasks
             </p>
           </CardContent>
         </Card>
@@ -115,10 +123,18 @@ export function ChecklistHeader({
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-4 w-4" />
-            Search & Filter Tasks
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Search & Filter Tasks
+            </CardTitle>
+            <AddTaskDialog>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Task
+              </Button>
+            </AddTaskDialog>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">

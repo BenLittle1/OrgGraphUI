@@ -37,8 +37,11 @@ import {
   Filter,
   X,
   MoreHorizontal,
-  Edit
+  Edit,
+  Trash2
 } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { EditTeamMemberDialog } from "@/components/edit-team-member-dialog"
 
 interface TeamMemberDetailProps {
   member: TeamMember | null
@@ -47,10 +50,11 @@ interface TeamMemberDetailProps {
 }
 
 export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetailProps) {
-  const { getMemberProgress, getTasksForMember, updateTaskStatus, assignTaskToMember, updateTaskDueDate } = useData()
+  const { getMemberProgress, getTasksForMember, updateTaskStatus, assignTaskToMember, updateTaskDueDate, deleteTeamMember } = useData()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [taskDetailsOpen, setTaskDetailsOpen] = useState<number | null>(null)
+  const [showEditDialog, setShowEditDialog] = useState(false)
   
   // Reset filters when modal opens or member changes
   useEffect(() => {
@@ -213,6 +217,17 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
     updateTaskDueDate(taskId, newDueDate)
   }
 
+  const handleEdit = () => {
+    setShowEditDialog(true)
+  }
+
+  const handleDelete = () => {
+    if (member && window.confirm(`Are you sure you want to remove ${member.name} from the team? This will unassign all their tasks.`)) {
+      deleteTeamMember(member.id)
+      onOpenChange(false) // Close the detail dialog after deletion
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg md:max-w-3xl lg:max-w-6xl xl:max-w-7xl max-h-[90vh] overflow-y-auto">
@@ -239,7 +254,31 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
                 
                 <div className="flex-1 space-y-4 mt-4 md:mt-0">
                   <div>
-                    <h2 className="text-2xl font-bold">{member.name}</h2>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-2xl font-bold">{member.name}</h2>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={handleEdit}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={handleDelete}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Remove
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                     <p className="text-lg text-muted-foreground">{member.role}</p>
                   </div>
 
@@ -577,6 +616,13 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
             </CardContent>
           </Card>
         </div>
+
+        {/* Edit Team Member Dialog */}
+        <EditTeamMemberDialog
+          member={showEditDialog ? member : null}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+        />
       </DialogContent>
     </Dialog>
   )
