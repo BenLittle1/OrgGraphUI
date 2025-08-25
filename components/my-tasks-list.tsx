@@ -122,18 +122,13 @@ export function MyTasksList({
               <div className="space-y-2">
                 {/* Context information */}
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  {item.type === 'subtask' ? (
+                  {item.type === 'subtask' && (
                     <>
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                         Subtask
                       </Badge>
                       <span>•</span>
                       <span className="font-medium">Task: {(item as SubtaskWithContext).taskName}</span>
-                      <span>•</span>
-                    </>
-                  ) : (
-                    <>
-                      <Badge variant="outline">Task</Badge>
                       <span>•</span>
                     </>
                   )}

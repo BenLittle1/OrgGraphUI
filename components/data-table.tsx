@@ -24,7 +24,12 @@ export function DataTable() {
   const upcomingTasks = getUpcomingTasksByDueDate(15)
 
   const handleTaskComplete = (taskId: number, isCompleted: boolean) => {
-    updateTaskStatus(taskId, isCompleted ? "completed" : "pending")
+    // For tasks with subtasks, we don't directly change the task status
+    // as it should be determined by subtask completion
+    const task = upcomingTasks.find(t => t.id === taskId)
+    if (task && task.subtasks.length === 0) {
+      updateTaskStatus(taskId, isCompleted ? "completed" : "pending")
+    }
   }
 
   const getDueDateInfo = (dueDate: string | null) => {
@@ -160,7 +165,7 @@ export function DataTable() {
                     >
                       <TableCell>
                         <Checkbox
-                          checked={getTaskCompletion(task.id) === 100}
+                          checked={getTaskCompletion(task.id) === 1.0}
                           onCheckedChange={(checked) => handleTaskComplete(task.id, checked as boolean)}
                           disabled={task.subtasks.length > 0}
                           title={task.subtasks.length > 0 ? "Complete subtasks to mark task as done" : ""}
@@ -175,7 +180,7 @@ export function DataTable() {
                             <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                               {task.subtasks.filter(st => st.status === 'completed').length}/{task.subtasks.length}
                             </Badge>
-                            {getTaskCompletion(task.id) === 100 && (
+                            {getTaskCompletion(task.id) === 1.0 && (
                               <CheckSquare className="h-3 w-3 text-green-600" />
                             )}
                           </div>
