@@ -105,20 +105,18 @@ export function MyTasksHeader({
             </CardContent>
           </Card>
 
-          {overdueItems > 0 && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">{overdueItems}</div>
-                <p className="text-xs text-muted-foreground">
-                  Requires attention
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{overdueItems}</div>
+              <p className="text-xs text-muted-foreground">
+                Requires attention
+              </p>
+            </CardContent>
+          </Card>
 
           {dueTodayItems > 0 && (
             <Card>
@@ -134,19 +132,6 @@ export function MyTasksHeader({
               </CardContent>
             </Card>
           )}
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{completedItems}</div>
-              <p className="text-xs text-muted-foreground">
-                Finished items
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Search and Filters */}

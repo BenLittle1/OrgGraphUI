@@ -16,7 +16,7 @@ import { AssigneeSelect } from "@/components/assignee-select"
 import { DatePicker } from "@/components/date-picker"
 import { EditSubtaskDialog } from "@/components/edit-subtask-dialog"
 import { Subtask, useData } from "@/contexts/data-context"
-import { MoreHorizontal, Edit, Calendar, Clock, AlertTriangle, Hash } from "lucide-react"
+import { MoreHorizontal, Edit, Calendar, Clock, AlertTriangle, Hash, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format, isValid, parseISO, differenceInDays } from "date-fns"
 
@@ -255,6 +255,13 @@ export function SubtaskItem({
                 Edit Subtask
               </DropdownMenuItem>
             </EditSubtaskDialog>
+            <DropdownMenuItem 
+              onSelect={() => setShowDeleteConfirm(true)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-2" />
+              Delete Subtask
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 

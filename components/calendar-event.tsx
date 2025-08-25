@@ -143,7 +143,7 @@ export function CalendarEvent({
             "group relative p-1.5 rounded-md text-xs cursor-pointer transition-all hover:shadow-sm border",
             getPriorityColor(eventData.priority),
             eventData.status === "completed" && "opacity-60 line-through",
-            isSubtask && "ml-2 border-l-2 border-l-blue-300 bg-blue-50/50 dark:bg-blue-950/50", // Subtask visual distinction
+            isSubtask && "ml-2 border-l-2 border-l-blue-400", // Subtask visual distinction
             className
           )}
           onClick={() => setShowDetails(true)}
@@ -155,9 +155,6 @@ export function CalendarEvent({
                 getStatusColor(eventData.status)
               )}
             />
-            {isSubtask && (
-              <span className="text-[9px] bg-blue-600 text-white px-1 rounded font-bold mr-1">S</span>
-            )}
             <span className="truncate font-medium flex-1">
               {eventData.name}
             </span>
@@ -296,7 +293,7 @@ export function CalendarEvent({
         "p-2 rounded-md text-sm cursor-pointer transition-all hover:shadow-sm border",
         getPriorityColor(eventData.priority),
         eventData.status === "completed" && "opacity-60 line-through",
-        isSubtask && "ml-2 border-l-2 border-l-blue-300 bg-blue-50/50 dark:bg-blue-950/50", // Subtask visual distinction
+        isSubtask && "ml-2 border-l-2 border-l-blue-400", // Subtask visual distinction
         className
       )}
       onClick={() => setShowDetails(true)}
@@ -309,9 +306,6 @@ export function CalendarEvent({
               getStatusColor(eventData.status)
             )}
           />
-          {isSubtask && (
-            <span className="text-[9px] bg-blue-600 text-white px-1 rounded font-bold mr-1">S</span>
-          )}
           <span className="font-medium flex-1 truncate">
             {eventData.name}
           </span>

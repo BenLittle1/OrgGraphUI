@@ -9,7 +9,10 @@
           "id": 1,
           "name": "Strategic Planning & Compliance",
           "tasks": [
-            {"id": 1, "name": "Business Plan Creation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 1, "name": "Business Plan Creation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1, "name": "Research market analysis", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": ["research"]},
+              {"id": 2, "name": "Draft executive summary", "status": "pending", "priority": "high", "assignee": null, "dueDate": null, "tags": ["writing"]}
+            ]},
             {"id": 2, "name": "Trademark Registration", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
             {"id": 3, "name": "Regulatory & Industry-Specific Compliance", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
