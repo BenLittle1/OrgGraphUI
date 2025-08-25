@@ -22,14 +22,12 @@ import { AssigneeSelect } from "@/components/assignee-select"
 import { DatePicker } from "@/components/date-picker"
 import { useData } from "@/contexts/data-context"
 import { TeamMember } from "@/data/team-data"
-import { format, isValid, parseISO, differenceInDays } from "date-fns"
+import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { 
   Mail, 
   Calendar, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle,
+ 
   User,
   Briefcase,
   Building,
@@ -42,6 +40,9 @@ import {
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { EditTeamMemberDialog } from "@/components/edit-team-member-dialog"
+import { TaskItem } from "@/components/task-item"
+import { SubtaskItem } from "@/components/subtask-item"
+import { Task, Subtask, NewSubtaskData } from "@/contexts/data-context"
 
 interface TeamMemberDetailProps {
   member: TeamMember | null
@@ -50,10 +51,23 @@ interface TeamMemberDetailProps {
 }
 
 export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetailProps) {
-  const { getMemberProgress, getTasksForMember, updateTaskStatus, assignTaskToMember, updateTaskDueDate, deleteTeamMember } = useData()
+  const { 
+    getMemberProgress, 
+    getTasksForMember, 
+    getSubtasksForMember,
+    updateTaskStatus, 
+    assignTaskToMember, 
+    updateTaskDueDate, 
+    deleteTeamMember,
+    addSubtask,
+    updateSubtaskStatus,
+    updateSubtaskAssignee,
+    updateSubtaskDueDate,
+    deleteSubtask,
+    getTaskCompletion
+  } = useData()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [taskDetailsOpen, setTaskDetailsOpen] = useState<number | null>(null)
   const [showEditDialog, setShowEditDialog] = useState(false)
   
   // Reset filters when modal opens or member changes
@@ -68,6 +82,18 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
   
   const progress = getMemberProgress(member.id)
   const memberTasks = getTasksForMember(member.id)
+  const memberSubtasks = getSubtasksForMember(member.id)
+  
+  // Mixed item type for tasks and subtasks
+  type TaskWithContext = Task & { category: string; subcategory: string; type: 'task' }
+  type SubtaskWithContext = Subtask & { taskName: string; category: string; subcategory: string; type: 'subtask' }
+  type MixedItem = TaskWithContext | SubtaskWithContext
+  
+  // Combine tasks and subtasks into mixed items
+  const allItems: MixedItem[] = [
+    ...memberTasks.map(task => ({ ...task, type: 'task' as const })),
+    ...memberSubtasks.map(subtask => ({ ...subtask, type: 'subtask' as const }))
+  ]
   
   const getInitials = (name: string) => {
     return name
@@ -125,97 +151,32 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
     })
   }
 
-  const getDueDateInfo = (dueDate: string | null) => {
-    if (!dueDate) return null
-    
-    try {
-      const parsedDate = parseISO(dueDate)
-      if (!isValid(parsedDate)) return null
-      
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const due = new Date(parsedDate)
-      due.setHours(0, 0, 0, 0)
-      
-      const daysUntilDue = differenceInDays(due, today)
-      
-      if (daysUntilDue < 0) {
-        return {
-          status: "overdue",
-          text: `Overdue by ${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) !== 1 ? 's' : ''}`,
-          color: "text-red-700",
-          bgColor: "bg-red-50",
-          borderColor: "border-red-200",
-          icon: AlertTriangle
-        }
-      } else if (daysUntilDue === 0) {
-        return {
-          status: "due-today",
-          text: "Due today",
-          color: "text-orange-700", 
-          bgColor: "bg-orange-50",
-          borderColor: "border-orange-200",
-          icon: Clock
-        }
-      } else if (daysUntilDue <= 3) {
-        return {
-          status: "due-soon",
-          text: `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}`,
-          color: "text-yellow-700",
-          bgColor: "bg-yellow-50", 
-          borderColor: "border-yellow-200",
-          icon: Calendar
-        }
-      } else {
-        return {
-          status: "due-later",
-          text: format(parsedDate, "MMM dd"),
-          color: "text-gray-700",
-          bgColor: "bg-gray-50",
-          borderColor: "border-gray-200", 
-          icon: Calendar
-        }
-      }
-    } catch {
-      return null
-    }
-  }
 
-  // Filter tasks based on search query and status
-  const filteredTasks = memberTasks.filter(task => {
-    const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         task.subcategory.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         task.category.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter items based on search query and status
+  const filteredItems = allItems.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.subcategory.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (item.type === 'subtask' && (item as SubtaskWithContext).taskName.toLowerCase().includes(searchQuery.toLowerCase()))
     
-    const matchesStatus = statusFilter === "all" || task.status === statusFilter
+    const matchesStatus = statusFilter === "all" || item.status === statusFilter
     
     return matchesSearch && matchesStatus
   })
 
-  const tasksByCategory = filteredTasks.reduce((acc, task) => {
-    if (!acc[task.category]) {
-      acc[task.category] = []
+  const itemsByCategory = filteredItems.reduce((acc, item) => {
+    if (!acc[item.category]) {
+      acc[item.category] = []
     }
-    acc[task.category].push(task)
+    acc[item.category].push(item)
     return acc
-  }, {} as Record<string, typeof filteredTasks>)
+  }, {} as Record<string, typeof filteredItems>)
 
   const clearFilters = () => {
     setSearchQuery("")
     setStatusFilter("all")
   }
 
-  const handleTaskComplete = (taskId: number, isCompleted: boolean) => {
-    updateTaskStatus(taskId, isCompleted ? "completed" : "pending")
-  }
-
-  const handleStatusSelect = (taskId: number, newStatus: string) => {
-    updateTaskStatus(taskId, newStatus)
-  }
-
-  const handleTaskDueDateChange = (taskId: number, newDueDate: string | null) => {
-    updateTaskDueDate(taskId, newDueDate)
-  }
 
   const handleEdit = () => {
     setShowEditDialog(true)
@@ -327,7 +288,7 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
                   <div className="text-3xl font-bold text-primary mb-2">
                     {progress.total}
                   </div>
-                  <p className="text-sm text-muted-foreground">Total Assigned</p>
+                  <p className="text-sm text-muted-foreground">Total Items</p>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-green-600 mb-2">
@@ -366,9 +327,9 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Assigned Tasks</CardTitle>
+                  <CardTitle>Assigned Work</CardTitle>
                   <DialogDescription>
-                    Tasks organized by business category
+                    Tasks and subtasks organized by business category
                   </DialogDescription>
                 </div>
               </div>
@@ -378,7 +339,7 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search tasks, categories, or subcategories..."
+                    placeholder="Search tasks, subtasks, categories, or subcategories..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -426,7 +387,7 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
               {/* Results Summary */}
               {(searchQuery || statusFilter !== "all") && (
                 <div className="text-sm text-muted-foreground mt-2">
-                  Showing {filteredTasks.length} of {memberTasks.length} tasks
+                  Showing {filteredItems.length} of {allItems.length} items
                   <Badge variant="secondary" className="ml-2">
                     Filtered
                   </Badge>
@@ -434,165 +395,65 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
               )}
             </CardHeader>
             <CardContent className="space-y-6">
-              {Object.entries(tasksByCategory).length > 0 ? (
-                Object.entries(tasksByCategory).map(([category, tasks]) => (
+              {Object.entries(itemsByCategory).length > 0 ? (
+                Object.entries(itemsByCategory).map(([category, items]) => (
                   <div key={category} className="space-y-3">
                     <h3 className="font-semibold text-base border-b border-border pb-2">
-                      {category} ({tasks.length} tasks)
+                      {category} ({items.length} items)
                     </h3>
                     <div className="grid gap-2">
-                      {tasks.map((task) => {
-                        const dueDateInfo = getDueDateInfo(task.dueDate)
-                        const IconComponent = dueDateInfo?.icon
-                        
+                      {items.map((item, index) => {
                         return (
-                          <div key={task.id} className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                            task.status === "completed" 
-                              ? "bg-green-50/50 border-green-200/50 opacity-75" 
-                              : "border-border bg-card hover:bg-accent/50"
-                          }`}>
-                            <Checkbox
-                              checked={task.status === "completed"}
-                              onCheckedChange={(checked) => handleTaskComplete(task.id, checked as boolean)}
-                              className="shrink-0"
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <p className={`font-medium text-sm ${
-                                  task.status === "completed" ? "line-through text-muted-foreground" : ""
-                                }`}>
-                                  {task.name}
-                                </p>
-                                <Badge 
-                                  variant="outline" 
-                                  className={getPriorityColor(task.priority)}
-                                >
-                                  {task.priority}
-                                </Badge>
+                          <div key={`${item.type}-${item.id}`}>
+                            <div className="space-y-2">
+                              {/* Context information */}
+                              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                {item.type === 'subtask' ? (
+                                  <>
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                      Subtask
+                                    </Badge>
+                                    <span>•</span>
+                                    <span className="font-medium">Task: {(item as SubtaskWithContext).taskName}</span>
+                                    <span>•</span>
+                                    <span>{item.subcategory}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Badge variant="outline">Task</Badge>
+                                    <span>•</span>
+                                    <span>{item.subcategory}</span>
+                                  </>
+                                )}
                               </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {task.subcategory}
-                              </p>
-                              {dueDateInfo && (
-                                <div className="flex items-center space-x-1 mt-2">
-                                  {IconComponent && <IconComponent className="h-3 w-3" />}
-                                  <Badge 
-                                    variant="outline" 
-                                    className={`text-xs ${dueDateInfo.bgColor} ${dueDateInfo.color} ${dueDateInfo.borderColor}`}
-                                  >
-                                    {dueDateInfo.text}
-                                  </Badge>
-                                </div>
+                              
+                              {/* Render appropriate item component */}
+                              {item.type === 'task' ? (
+                                <TaskItem
+                                  task={item as TaskWithContext}
+                                  updateTaskStatus={updateTaskStatus}
+                                  assignTaskToMember={assignTaskToMember}
+                                  updateTaskDueDate={updateTaskDueDate}
+                                  deleteTask={() => {}} // Team members can't delete tasks from this view
+                                  addSubtask={addSubtask}
+                                  updateSubtaskStatus={updateSubtaskStatus}
+                                  updateSubtaskAssignee={updateSubtaskAssignee}
+                                  updateSubtaskDueDate={updateSubtaskDueDate}
+                                  deleteSubtask={deleteSubtask}
+                                  getTaskCompletion={getTaskCompletion}
+                                />
+                              ) : (
+                                <SubtaskItem
+                                  subtask={item as SubtaskWithContext}
+                                  taskId={0} // We don't need the parent task ID for standalone display
+                                  updateSubtaskStatus={updateSubtaskStatus}
+                                  updateSubtaskAssignee={updateSubtaskAssignee}
+                                  updateSubtaskDueDate={updateSubtaskDueDate}
+                                  deleteSubtask={deleteSubtask}
+                                />
                               )}
                             </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Select value={task.status} onValueChange={(newStatus) => handleStatusSelect(task.id, newStatus)}>
-                                <SelectTrigger className="w-auto h-8 text-xs border-none shadow-none">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pending">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-2 h-2 rounded-full bg-gray-400"></div>
-                                      Pending
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="in_progress">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                                      In Progress
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="completed">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                                      Completed
-                                    </div>
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-
-                              {/* Task Details Dialog */}
-                              <Dialog open={taskDetailsOpen === task.id} onOpenChange={(open) => setTaskDetailsOpen(open ? task.id : null)}>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-3 w-3" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle className="flex items-center gap-2">
-                                      <Edit className="h-4 w-4" />
-                                      Task Details
-                                    </DialogTitle>
-                                  </DialogHeader>
-                                  
-                                  <div className="space-y-4">
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Task Name</label>
-                                      <p className="mt-1 text-sm">{task.name}</p>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 gap-4">
-                                      <div>
-                                        <label className="text-sm font-medium text-muted-foreground">Priority</label>
-                                        <div className="mt-1">
-                                          <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                                            {task.priority}
-                                          </Badge>
-                                        </div>
-                                      </div>
-                                      
-                                      <div>
-                                        <label className="text-sm font-medium text-muted-foreground">Status</label>
-                                        <div className="mt-1">
-                                          <Badge variant="outline" className={getStatusColor(task.status)}>
-                                            {task.status.replace("_", " ")}
-                                          </Badge>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Assignee</label>
-                                      <div className="mt-1">
-                                        <AssigneeSelect
-                                          taskId={task.id}
-                                          currentAssignee={task.assignee}
-                                          assignTaskToMember={assignTaskToMember}
-                                        />
-                                      </div>
-                                    </div>
-                                    
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Due Date</label>
-                                      <div className="mt-1">
-                                        <DatePicker
-                                          date={task.dueDate}
-                                          onDateChange={(newDueDate) => handleTaskDueDateChange(task.id, newDueDate)}
-                                          placeholder="Set due date"
-                                        />
-                                      </div>
-                                    </div>
-                                    
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Category</label>
-                                      <p className="mt-1 text-sm text-muted-foreground">{task.category}</p>
-                                    </div>
-                                    
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Subcategory</label>
-                                      <p className="mt-1 text-sm text-muted-foreground">{task.subcategory}</p>
-                                    </div>
-                                    
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Task ID</label>
-                                      <p className="mt-1 text-sm text-muted-foreground">#{task.id}</p>
-                                    </div>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            </div>
+                            {index < items.length - 1 && <Separator className="mt-3" />}
                           </div>
                         )
                       })}
@@ -602,9 +463,9 @@ export function TeamMemberDetail({ member, open, onOpenChange }: TeamMemberDetai
               ) : (
                 <div className="text-center py-8">
                   <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No tasks found</h3>
+                  <h3 className="text-lg font-semibold mb-2">No items found</h3>
                   <p className="text-muted-foreground mb-4">
-                    No tasks match your current search criteria
+                    No tasks or subtasks match your current search criteria
                   </p>
                   {(searchQuery || statusFilter !== "all") && (
                     <Button variant="outline" onClick={clearFilters}>

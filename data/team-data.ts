@@ -71,9 +71,10 @@ export const teamData: TeamData = {
 }
 
 // Task assignment mapping - connects team members to specific task IDs from data.json
+// Updated for comprehensive business process data structure
 export const taskAssignments: Record<string, number[]> = {
-  "tm-001": [1, 2, 9, 89, 3, 4, 5, 6, 7, 8, 11, 21, 22, 23, 24, 30, 31, 62, 63, 64, 65, 67, 74], // CEO: Business/Legal/Board + Critical Financial + Strategic Marketing
-  "tm-002": [46, 47, 48, 49, 50, 51, 54, 55, 56, 26, 27, 28, 32, 69, 70], // Senior Engineer: Core Technical + Financial Processes + Technical Marketing
-  "tm-003": [60, 61, 71, 72, 75, 76, 25, 29, 68, 73, 77], // Engineer: Brand/Content + Remaining Financial + Additional Marketing
-  "tm-004": [45, 52, 53, 66, 43, 44, 13, 18, 19] // Chief Scientist: Research + IP Strategy + Data Management + Competitive Analysis + Product Strategy + Risk Assessment
+  "tm-001": [1, 2, 3, 26, 27, 28, 29, 30, 31, 32, 42, 43, 44, 45, 46, 54, 55, 63, 64, 65, 90, 91, 98, 152, 153, 155], // CEO: Strategic Planning, Investment, Board, Finance, GTM Strategy, Fundraising
+  "tm-002": [79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 56, 57, 58, 59, 60, 61, 62, 127, 128, 129, 130], // Senior Engineer: Technology Stack, IT Security, Financial Systems, CRM
+  "tm-003": [76, 77, 78, 102, 103, 104, 105, 106, 112, 131, 132, 133, 139, 140, 144, 145, 146, 66, 67, 68, 69, 70, 71], // Engineer: Product, Branding, Content, Customer Success, HR
+  "tm-004": [72, 73, 74, 75, 92, 93, 94, 95, 96, 97, 107, 108, 109, 134, 135, 136, 154] // Chief Scientist: Research, Market Analysis, Competitive Intelligence, ROI Methodology
 }

@@ -5,6 +5,16 @@ import { parseISO, isValid, differenceInDays } from "date-fns"
 import initialData from "@/data.json"
 import { teamData as initialTeamData, taskAssignments, TeamMember, TeamData } from "@/data/team-data"
 
+export interface Subtask {
+  id: number
+  name: string
+  status: string
+  priority: string
+  assignee: string | null
+  dueDate: string | null
+  tags?: string[]
+}
+
 export interface Task {
   id: number
   name: string
@@ -12,6 +22,7 @@ export interface Task {
   priority: string
   assignee: string | null
   dueDate: string | null
+  subtasks: Subtask[]
 }
 
 export interface Subcategory {
@@ -51,6 +62,14 @@ export interface NewTaskData {
   priority: "high" | "medium" | "low"
   assignee?: string | null
   dueDate?: string | null
+}
+
+export interface NewSubtaskData {
+  name: string
+  priority: "high" | "medium" | "low"
+  assignee?: string | null
+  dueDate?: string | null
+  tags?: string[]
 }
 
 export interface NewTeamMemberData {
@@ -102,6 +121,20 @@ interface DataContextType {
   getNextTeamMemberId: () => string
   addDepartment: (departmentName: string) => void
   getCurrentUserTasks: (userName: string) => Array<Task & { category: string; subcategory: string }>
+  // Subtask management functions
+  addSubtask: (taskId: number, subtaskData: NewSubtaskData) => void
+  updateSubtaskStatus: (subtaskId: number, newStatus: string) => void
+  updateSubtaskAssignee: (subtaskId: number, assignee: string | null) => void
+  updateSubtaskPriority: (subtaskId: number, priority: string) => void
+  updateSubtaskDueDate: (subtaskId: number, dueDate: string | null) => void
+  updateSubtaskName: (subtaskId: number, name: string) => void
+  updateSubtaskTags: (subtaskId: number, tags: string[]) => void
+  deleteSubtask: (subtaskId: number) => void
+  getSubtaskById: (subtaskId: number) => Subtask | null
+  getNextSubtaskId: () => number
+  getTaskCompletion: (taskId: number) => number
+  getSubtasksForMember: (memberId: string) => Array<Subtask & { taskName: string; category: string; subcategory: string }>
+  getUpcomingSubtasksByDueDate: (limit?: number) => Array<Subtask & { taskName: string; category: string; subcategory: string }>
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -127,21 +160,37 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             const memberName = assignedMember ? 
               teamData.members.find(m => m.id === assignedMember[0])?.name || null : null
             
-            // Add some sample due dates for demonstration
+            // Add some sample due dates for demonstration with new task IDs
             let sampleDueDate = null
             if (task.id === 1) sampleDueDate = "2025-08-25" // Business Plan Creation
-            if (task.id === 3) sampleDueDate = "2025-08-22" // Name Registration  
-            if (task.id === 15) sampleDueDate = "2025-08-28" // Product Design
-            if (task.id === 22) sampleDueDate = "2025-08-30" // Technical Architecture
-            if (task.id === 35) sampleDueDate = "2025-08-20" // Due today
-            if (task.id === 42) sampleDueDate = "2025-08-18" // Overdue
-            if (task.id === 50) sampleDueDate = "2025-09-05" // Future task
-            if (task.id === 8) sampleDueDate = "2025-08-24" // Another task
+            if (task.id === 3) sampleDueDate = "2025-08-22" // Regulatory Compliance  
+            if (task.id === 26) sampleDueDate = "2025-08-28" // Term Sheet
+            if (task.id === 42) sampleDueDate = "2025-08-30" // Board Setup
+            if (task.id === 54) sampleDueDate = "2025-08-20" // Bank Account - Due today
+            if (task.id === 79) sampleDueDate = "2025-08-18" // Frontend Tech - Overdue
+            if (task.id === 90) sampleDueDate = "2025-09-05" // Market Analysis - Future
+            if (task.id === 102) sampleDueDate = "2025-08-24" // Brand Name
+
+            // Process subtasks to assign them as well
+            const processedSubtasks = task.subtasks.map(subtask => {
+              // Check if any team member is assigned to this subtask specifically
+              const subtaskAssignedMember = Object.entries(taskAssignments).find(
+                ([memberId, taskIds]) => taskIds.includes(subtask.id)
+              )
+              const subtaskMemberName = subtaskAssignedMember ? 
+                teamData.members.find(m => m.id === subtaskAssignedMember[0])?.name || memberName : memberName
+              
+              return {
+                ...subtask,
+                assignee: subtaskMemberName
+              }
+            })
 
             return {
               ...task,
               assignee: memberName,
-              dueDate: sampleDueDate
+              dueDate: sampleDueDate,
+              subtasks: processedSubtasks // Preserve and process existing subtasks
             }
           })
         }))
@@ -157,20 +206,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const allTasks = categories.flatMap(cat => 
       cat.subcategories.flatMap(sub => sub.tasks)
     )
+    const allSubtasks = allTasks.flatMap(task => task.subtasks)
+    
+    // Combine tasks and subtasks for total counts
+    const allItems = [...allTasks, ...allSubtasks]
     
     return {
-      totalTasks: allTasks.length,
+      totalTasks: allItems.length, // Count both tasks and subtasks
       totalCategories: categories.length,
       totalSubcategories: categories.reduce((sum, cat) => sum + cat.subcategories.length, 0),
       statusCounts: {
-        pending: allTasks.filter(t => t.status === "pending").length,
-        in_progress: allTasks.filter(t => t.status === "in_progress").length,
-        completed: allTasks.filter(t => t.status === "completed").length,
+        pending: allItems.filter(item => item.status === "pending").length,
+        in_progress: allItems.filter(item => item.status === "in_progress").length,
+        completed: allItems.filter(item => item.status === "completed").length,
       },
       priorityCounts: {
-        high: allTasks.filter(t => t.priority === "high").length,
-        medium: allTasks.filter(t => t.priority === "medium").length,
-        low: allTasks.filter(t => t.priority === "low").length,
+        high: allItems.filter(item => item.priority === "high").length,
+        medium: allItems.filter(item => item.priority === "medium").length,
+        low: allItems.filter(item => item.priority === "low").length,
       }
     }
   }, [])
@@ -297,15 +350,44 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return null
   }, [data.categories])
 
+  const getTaskCompletion = useCallback((taskId: number): number => {
+    const task = getTaskById(taskId)
+    if (!task) return 0
+
+    // If no subtasks, calculate based on task status
+    if (task.subtasks.length === 0) {
+      switch (task.status) {
+        case "completed": return 1.0
+        case "in_progress": return 0.5
+        case "pending": return 0.0
+        default: return 0.0
+      }
+    }
+
+    // If has subtasks, calculate based on subtask completion (ignore task status)
+    const totalSubtasks = task.subtasks.length
+    const completedSubtasks = task.subtasks.filter(st => st.status === "completed").length
+    const inProgressSubtasks = task.subtasks.filter(st => st.status === "in_progress").length
+    
+    // Calculate weighted progress: completed = 1.0, in_progress = 0.5, pending = 0.0
+    const weightedProgress = completedSubtasks + (inProgressSubtasks * 0.5)
+    return weightedProgress / totalSubtasks
+  }, [getTaskById])
+
   const getCategoryProgress = useCallback((categoryId: number): number => {
     const category = data.categories.find(c => c.id === categoryId)
     if (!category) return 0
     
     const allTasks = category.subcategories.flatMap(sub => sub.tasks)
-    const completedTasks = allTasks.filter(task => task.status === "completed")
+    if (allTasks.length === 0) return 0
     
-    return allTasks.length > 0 ? Math.round((completedTasks.length / allTasks.length) * 100) : 0
-  }, [data.categories])
+    // Use task-level completion that factors in subtasks
+    const totalCompletion = allTasks.reduce((sum, task) => {
+      return sum + getTaskCompletion(task.id)
+    }, 0)
+    
+    return Math.round((totalCompletion / allTasks.length) * 100)
+  }, [data.categories, getTaskCompletion])
 
   const getHighPriorityTasks = useCallback((limit = 20) => {
     const highPriorityTasks: Array<Task & { category: string; subcategory: string }> = []
@@ -427,11 +509,91 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return memberTasks
   }, [data.categories, getTeamMemberById])
 
+  const getSubtasksForMember = useCallback((memberId: string): Array<Subtask & { taskName: string; category: string; subcategory: string }> => {
+    const member = getTeamMemberById(memberId)
+    if (!member) return []
+
+    const memberSubtasks: Array<Subtask & { taskName: string; category: string; subcategory: string }> = []
+    
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        for (const task of subcategory.tasks) {
+          for (const subtask of task.subtasks) {
+            if (subtask.assignee === member.name) {
+              memberSubtasks.push({
+                ...subtask,
+                taskName: task.name,
+                category: category.name,
+                subcategory: subcategory.name
+              })
+            }
+          }
+        }
+      }
+    }
+    
+    return memberSubtasks
+  }, [data.categories, getTeamMemberById])
+
+  const getUpcomingSubtasksByDueDate = useCallback((limit = 20) => {
+    const subtasksWithDueDates: Array<Subtask & { taskName: string; category: string; subcategory: string; sortKey: number }> = []
+    
+    // Collect all subtasks that have due dates
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        for (const task of subcategory.tasks) {
+          for (const subtask of task.subtasks) {
+            if (subtask.dueDate) {
+              try {
+                const parsedDate = parseISO(subtask.dueDate)
+                if (isValid(parsedDate)) {
+                  const today = new Date()
+                  today.setHours(0, 0, 0, 0)
+                  const due = new Date(parsedDate)
+                  due.setHours(0, 0, 0, 0)
+                  
+                  const daysUntilDue = differenceInDays(due, today)
+                  
+                  // Create sort key: overdue (-1000 + days), due today (0), future (positive days)
+                  const sortKey = daysUntilDue < 0 ? -1000 + daysUntilDue : daysUntilDue
+                  
+                  subtasksWithDueDates.push({
+                    ...subtask,
+                    taskName: task.name,
+                    category: category.name,
+                    subcategory: subcategory.name,
+                    sortKey
+                  })
+                }
+              } catch {
+                // Skip invalid dates
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Sort by due date (overdue first, then by proximity)
+    return subtasksWithDueDates
+      .sort((a, b) => a.sortKey - b.sortKey)
+      .slice(0, limit)
+      .map(({ sortKey, ...subtask }) => subtask)
+  }, [data.categories])
+
   const getMemberProgress = useCallback((memberId: string) => {
     const memberTasks = getTasksForMember(memberId)
-    const completed = memberTasks.filter(task => task.status === "completed").length
-    const inProgress = memberTasks.filter(task => task.status === "in_progress").length
-    const total = memberTasks.length
+    const memberSubtasks = getSubtasksForMember(memberId)
+    
+    // Count completed/in-progress items (tasks + subtasks)
+    const completedTasks = memberTasks.filter(task => task.status === "completed").length
+    const inProgressTasks = memberTasks.filter(task => task.status === "in_progress").length
+    const completedSubtasks = memberSubtasks.filter(subtask => subtask.status === "completed").length
+    const inProgressSubtasks = memberSubtasks.filter(subtask => subtask.status === "in_progress").length
+    
+    const completed = completedTasks + completedSubtasks
+    const inProgress = inProgressTasks + inProgressSubtasks
+    const total = memberTasks.length + memberSubtasks.length
     
     // Calculate weighted progress: completed = 1.0, in_progress = 0.5, pending = 0.0
     const weightedProgress = completed + (inProgress * 0.5)
@@ -444,7 +606,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       percentage,
       pending: total - completed - inProgress
     }
-  }, [getTasksForMember])
+  }, [getTasksForMember, getSubtasksForMember])
 
   const assignTaskToMember = useCallback((taskId: number, memberId: string | null) => {
     const memberName = memberId ? getTeamMemberById(memberId)?.name || null : null
@@ -537,7 +699,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       status: "pending",
       priority: taskData.priority,
       assignee: taskData.assignee || null,
-      dueDate: taskData.dueDate || null
+      dueDate: taskData.dueDate || null,
+      subtasks: []
     }
 
     setData(prev => {
@@ -807,6 +970,297 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  // Subtask management functions
+  const getNextSubtaskId = useCallback((): number => {
+    let maxId = 0
+    // Find the highest subtask ID across all tasks and subtasks
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        for (const task of subcategory.tasks) {
+          for (const subtask of task.subtasks) {
+            if (subtask.id > maxId) {
+              maxId = subtask.id
+            }
+          }
+        }
+      }
+    }
+    return maxId + 1
+  }, [data.categories])
+
+  const getSubtaskById = useCallback((subtaskId: number): Subtask | null => {
+    // Search through all tasks and their subtasks
+    for (const category of data.categories) {
+      for (const subcategory of category.subcategories) {
+        for (const task of subcategory.tasks) {
+          const subtask = task.subtasks.find(st => st.id === subtaskId)
+          if (subtask) return subtask
+        }
+      }
+    }
+    return null
+  }, [data.categories])
+
+  const addSubtask = useCallback((taskId: number, subtaskData: NewSubtaskData) => {
+    const newSubtaskId = getNextSubtaskId()
+    const newSubtask: Subtask = {
+      id: newSubtaskId,
+      name: subtaskData.name,
+      status: "pending",
+      priority: subtaskData.priority,
+      assignee: subtaskData.assignee || null,
+      dueDate: subtaskData.dueDate || null,
+      tags: subtaskData.tags || []
+    }
+
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task => {
+            if (task.id === taskId) {
+              return {
+                ...task,
+                subtasks: [...task.subtasks, newSubtask]
+              }
+            }
+            return task
+          })
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [getNextSubtaskId, recalculateSummary])
+
+  const updateSubtaskStatus = useCallback((subtaskId: number, newStatus: string) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task => {
+            // Update the subtask status
+            const updatedSubtasks = task.subtasks.map(subtask =>
+              subtask.id === subtaskId ? { ...subtask, status: newStatus } : subtask
+            )
+            
+            // Only update parent task status if this task has subtasks and the updated subtask belongs to this task
+            if (task.subtasks.length > 0 && task.subtasks.some(st => st.id === subtaskId)) {
+              // Calculate new parent task status based on subtask completion
+              const completedSubtasks = updatedSubtasks.filter(st => st.status === "completed").length
+              const inProgressSubtasks = updatedSubtasks.filter(st => st.status === "in_progress").length
+              const totalSubtasks = updatedSubtasks.length
+              
+              let parentTaskStatus = task.status
+              if (completedSubtasks === totalSubtasks) {
+                // All subtasks completed
+                parentTaskStatus = "completed"
+              } else if (completedSubtasks > 0 || inProgressSubtasks > 0) {
+                // Some progress made
+                parentTaskStatus = "in_progress"
+              } else {
+                // All subtasks pending
+                parentTaskStatus = "pending"
+              }
+              
+              return {
+                ...task,
+                status: parentTaskStatus,
+                subtasks: updatedSubtasks
+              }
+            }
+            
+            return {
+              ...task,
+              subtasks: updatedSubtasks
+            }
+          })
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const updateSubtaskAssignee = useCallback((subtaskId: number, assignee: string | null) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task => ({
+            ...task,
+            subtasks: task.subtasks.map(subtask =>
+              subtask.id === subtaskId ? { ...subtask, assignee } : subtask
+            )
+          }))
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const updateSubtaskPriority = useCallback((subtaskId: number, priority: string) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task => ({
+            ...task,
+            subtasks: task.subtasks.map(subtask =>
+              subtask.id === subtaskId ? { ...subtask, priority } : subtask
+            )
+          }))
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const updateSubtaskDueDate = useCallback((subtaskId: number, dueDate: string | null) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task => ({
+            ...task,
+            subtasks: task.subtasks.map(subtask =>
+              subtask.id === subtaskId ? { ...subtask, dueDate } : subtask
+            )
+          }))
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const updateSubtaskName = useCallback((subtaskId: number, name: string) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task => ({
+            ...task,
+            subtasks: task.subtasks.map(subtask =>
+              subtask.id === subtaskId ? { ...subtask, name: name.trim() } : subtask
+            )
+          }))
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const updateSubtaskTags = useCallback((subtaskId: number, tags: string[]) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task => ({
+            ...task,
+            subtasks: task.subtasks.map(subtask =>
+              subtask.id === subtaskId ? { ...subtask, tags } : subtask
+            )
+          }))
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+  const deleteSubtask = useCallback((subtaskId: number) => {
+    setData(prev => {
+      const newCategories = prev.categories.map(category => ({
+        ...category,
+        subcategories: category.subcategories.map(subcategory => ({
+          ...subcategory,
+          tasks: subcategory.tasks.map(task => {
+            // Remove the subtask
+            const updatedSubtasks = task.subtasks.filter(subtask => subtask.id !== subtaskId)
+            
+            // Only update parent task status if this task had the deleted subtask
+            if (task.subtasks.some(st => st.id === subtaskId)) {
+              // If no subtasks remain, keep current task status
+              if (updatedSubtasks.length === 0) {
+                return {
+                  ...task,
+                  subtasks: updatedSubtasks
+                }
+              }
+              
+              // Calculate new parent task status based on remaining subtask completion
+              const completedSubtasks = updatedSubtasks.filter(st => st.status === "completed").length
+              const inProgressSubtasks = updatedSubtasks.filter(st => st.status === "in_progress").length
+              const totalSubtasks = updatedSubtasks.length
+              
+              let parentTaskStatus = task.status
+              if (completedSubtasks === totalSubtasks) {
+                // All remaining subtasks completed
+                parentTaskStatus = "completed"
+              } else if (completedSubtasks > 0 || inProgressSubtasks > 0) {
+                // Some progress made
+                parentTaskStatus = "in_progress"
+              } else {
+                // All remaining subtasks pending
+                parentTaskStatus = "pending"
+              }
+              
+              return {
+                ...task,
+                status: parentTaskStatus,
+                subtasks: updatedSubtasks
+              }
+            }
+            
+            return {
+              ...task,
+              subtasks: updatedSubtasks
+            }
+          })
+        }))
+      }))
+      
+      return {
+        categories: newCategories,
+        summary: recalculateSummary(newCategories)
+      }
+    })
+  }, [recalculateSummary])
+
+
+
   const value: DataContextType = useMemo(() => ({
     data,
     teamData,
@@ -845,7 +1299,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     deleteTeamMember,
     getNextTeamMemberId,
     addDepartment,
-    getCurrentUserTasks
+    getCurrentUserTasks,
+      // Subtask functions
+    addSubtask,
+    updateSubtaskStatus,
+    updateSubtaskAssignee,
+    updateSubtaskPriority,
+    updateSubtaskDueDate,
+    updateSubtaskName,
+    updateSubtaskTags,
+    deleteSubtask,
+    getSubtaskById,
+    getNextSubtaskId,
+    getTaskCompletion,
+    getSubtasksForMember,
+    getUpcomingSubtasksByDueDate
   }), [
     data,
     teamData,
@@ -884,7 +1352,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     deleteTeamMember,
     getNextTeamMemberId,
     addDepartment,
-    getCurrentUserTasks
+    getCurrentUserTasks,
+    // Subtask functions
+    addSubtask,
+    updateSubtaskStatus,
+    updateSubtaskAssignee,
+    updateSubtaskPriority,
+    updateSubtaskDueDate,
+    updateSubtaskName,
+    updateSubtaskTags,
+    deleteSubtask,
+    getSubtaskById,
+    getNextSubtaskId,
+    getTaskCompletion,
+    getSubtasksForMember,
+    getUpcomingSubtasksByDueDate
   ])
 
   return (

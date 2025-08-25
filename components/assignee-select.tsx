@@ -11,9 +11,10 @@ interface AssigneeSelectProps {
   taskId: number
   currentAssignee: string | null
   assignTaskToMember: (taskId: number, memberId: string | null) => void
+  compact?: boolean
 }
 
-export function AssigneeSelect({ taskId, currentAssignee, assignTaskToMember }: AssigneeSelectProps) {
+export function AssigneeSelect({ taskId, currentAssignee, assignTaskToMember, compact = false }: AssigneeSelectProps) {
   const { getTeamMembers } = useData()
   const [isOpen, setIsOpen] = useState(false)
   
@@ -47,27 +48,35 @@ export function AssigneeSelect({ taskId, currentAssignee, assignTaskToMember }: 
       onOpenChange={setIsOpen}
     >
       <SelectTrigger className={cn(
-        "h-8 min-w-[120px] justify-between font-normal pl-3 pr-2 py-1.5 hover:bg-accent/50 text-xs",
+        "justify-between font-normal hover:bg-accent/50 text-xs flex items-center",
+        compact ? "!h-6 min-w-[100px] pl-2 pr-1.5 py-0 leading-none" : "!h-7 min-w-[120px] pl-3 pr-2 py-0 leading-none",
         !currentAssignee && "text-muted-foreground border-dashed"
       )}>
         <SelectValue asChild>
           <div className="flex items-center gap-1.5">
             {currentMember ? (
               <>
-                <Avatar className="h-5 w-5">
+                <Avatar className={compact ? "h-4 w-4" : "h-4 w-4"}>
                   <AvatarImage src={currentMember.avatarUrl} alt={currentMember.name} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-[9px] font-medium flex items-center justify-center">
+                  <AvatarFallback className={cn(
+                    "bg-primary text-primary-foreground font-medium flex items-center justify-center leading-[1] align-middle",
+                    compact ? "text-[8px]" : "text-[8px]"
+                  )}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {getInitials(currentMember.name)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs text-muted-foreground truncate max-w-20">
+                <span className={cn(
+                  "text-muted-foreground truncate",
+                  compact ? "text-[11px] max-w-16" : "text-xs max-w-20"
+                )}>
                   {currentMember.name.split(' ')[0]}
                 </span>
               </>
             ) : (
               <>
-                <User className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">
+                <User className={cn("text-muted-foreground", compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
+                <span className={cn("text-muted-foreground", compact ? "text-[11px]" : "text-xs")}>
                   Unassigned
                 </span>
               </>

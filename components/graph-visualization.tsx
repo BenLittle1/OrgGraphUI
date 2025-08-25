@@ -156,8 +156,8 @@ export default function GraphVisualization({
     let tooltipContent = `<div style="margin-bottom: 12px;"><strong>${d.name}</strong></div>`
     tooltipContent += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><span style="font-weight: 500;">Completion</span><span>${Math.round(d.completion * 100)}%</span></div>`
     
-    // Show task-specific information for task nodes (level 3)
-    if (d.level === 3 && d.originalNode) {
+    // Show task-specific information for task nodes (level 3) and subtask nodes (level 4)
+    if ((d.level === 3 || d.level === 4) && d.originalNode) {
       const task = d.originalNode
       
       if (task.status) {
@@ -213,8 +213,8 @@ export default function GraphVisualization({
   const renderNodeLabels = useCallback((nodeSelection: d3.Selection<SVGGElement, GraphNode, SVGGElement, unknown>) => {
     nodeSelection.each(function(d) {
       const nodeGroup = d3.select(this)
-      const radius = Math.max(12, Math.sqrt(d.weight) * 6)
-      const fontSize = Math.max(11, 16 - d.level * 2) * Math.min(1.5, Math.sqrt(d.weight) / 3)
+      const radius = d.level === 4 ? Math.max(6, Math.sqrt(d.weight) * 3) : Math.max(12, Math.sqrt(d.weight) * 6)
+      const fontSize = Math.max(9, 14 - d.level * 1.5) * Math.min(1.2, Math.sqrt(d.weight) / 4)
       
       // Word wrapping algorithm - exact from guide
       const words = d.name.split(/\s+/)
@@ -329,6 +329,12 @@ export default function GraphVisualization({
           if ((source.level === 2 && target.level === 3) || (source.level === 3 && target.level === 2)) {
             return 40 // Subcategory to task - tight clustering
           }
+          if ((source.level === 3 && target.level === 4) || (source.level === 4 && target.level === 3)) {
+            return 25 // Task to subtask - very tight clustering
+          }
+          if ((source.level === 3 && target.level === 4) || (source.level === 4 && target.level === 3)) {
+            return 25 // Task to subtask - very tight clustering
+          }
           
           // Original distance calculation for root-to-category links
           return 80 + (source.level + target.level) * 20
@@ -355,6 +361,13 @@ export default function GraphVisualization({
             return baseStrength * levelMultiplier * 30 // Extremely strong repulsion for maximum separation
           }
           
+          // For level 4 (subtasks), use lighter repulsion to cluster near parent tasks
+          if (node.level === 4) {
+            const levelMultiplier = 1 // Minimal repulsion for subtasks
+            const weightMultiplier = Math.sqrt(node.weight) * 0.5 // Even lighter weight factor
+            return baseStrength * levelMultiplier * weightMultiplier
+          }
+          
           // Keep weight-based repulsion for other levels (subcategories and tasks)
           const levelMultiplier = Math.max(1, 3 - node.level)
           const weightMultiplier = Math.sqrt(node.weight)
@@ -364,9 +377,11 @@ export default function GraphVisualization({
       .force('center', d3.forceCenter(w / 2, h / 2))
       .force('collision', d3.forceCollide()
         .radius(d => {
-          // Collision radius based on visual node size - EXACT from guide
           const node = d as GraphNode
-          return Math.max(15, Math.sqrt(node.weight) * 6 + 4)
+          if (node.level === 4) {
+            return Math.max(8, Math.sqrt(node.weight) * 3 + 2) // Smaller collision for subtasks
+          }
+          return Math.max(15, Math.sqrt(node.weight) * 6 + 4) // Existing logic
         })
         .strength(0.8)
       )
@@ -416,7 +431,12 @@ export default function GraphVisualization({
 
     // Add circles - exact from guide
     nodeSelection.append('circle')
-      .attr('r', d => Math.max(12, Math.sqrt(d.weight) * 6))
+      .attr('r', d => {
+        if (d.level === 4) {
+          return Math.max(6, Math.sqrt(d.weight) * 3) // Smaller subtask nodes
+        }
+        return Math.max(12, Math.sqrt(d.weight) * 6) // Existing logic
+      })
       .attr('fill', d => getCompletionColor(d.completion))
       .attr('stroke', 'hsl(var(--background))')
       .attr('stroke-width', 1.5)
@@ -451,7 +471,9 @@ export default function GraphVisualization({
         d3.select(this).select('circle')
           .transition()
           .duration(200)
-          .attr('r', Math.max(15, Math.sqrt(d.weight) * 6 + 3))
+          .attr('r', d.level === 4 ? 
+            Math.max(8, Math.sqrt(d.weight) * 3 + 2) :  // Smaller hover for subtasks
+            Math.max(15, Math.sqrt(d.weight) * 6 + 3))   // Existing logic
           .attr('opacity', 1)
 
         // Show tooltip
@@ -460,9 +482,11 @@ export default function GraphVisualization({
       .on('mouseout', function(event, d) {
         // Restore size
         d3.select(this).select('circle')
-          .transition()
+          .transition() 
           .duration(200)
-          .attr('r', Math.max(12, Math.sqrt(d.weight) * 6))
+          .attr('r', d.level === 4 ?
+            Math.max(6, Math.sqrt(d.weight) * 3) :       // Restore subtask size
+            Math.max(12, Math.sqrt(d.weight) * 6))       // Existing logic
           .attr('opacity', 0.9)
 
         // Hide tooltip

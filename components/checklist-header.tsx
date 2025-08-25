@@ -108,13 +108,13 @@ export function ChecklistHeader({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Items</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold mb-2 text-blue-600">{activeTasksPercentage}%</div>
             <Progress value={activeTasksPercentage} className="h-2 bg-blue-100 [&>div]:bg-blue-500" />
             <p className="text-xs text-muted-foreground mt-2">
-              {data.summary.statusCounts.in_progress} of {incompleteTasks} incomplete tasks
+              {data.summary.statusCounts.in_progress} of {incompleteTasks} incomplete items
             </p>
           </CardContent>
         </Card>
@@ -126,7 +126,7 @@ export function ChecklistHeader({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Search className="h-4 w-4" />
-              Search & Filter Tasks
+              Search & Filter Items
             </CardTitle>
             <AddTaskDialog>
               <Button className="gap-2">
@@ -141,7 +141,7 @@ export function ChecklistHeader({
             {/* Search bar on the left */}
             <div className="flex-1">
               <Input
-                placeholder="Search tasks..."
+                placeholder="Search items..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"

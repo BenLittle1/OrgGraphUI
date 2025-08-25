@@ -9,7 +9,7 @@ import { TrendingUp, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
 
 export function ChartAreaInteractive() {
-  const { data, getCategoryProgress } = useData()
+  const { data, getCategoryProgress, getTaskCompletion } = useData()
 
   return (
     <Card>
@@ -31,8 +31,11 @@ export function ChartAreaInteractive() {
         <div className="space-y-6">
           {data.categories.map((category) => {
             const allTasks = category.subcategories.flatMap(sub => sub.tasks)
-            const completedTasks = allTasks.filter(task => task.status === "completed")
-            const inProgressTasks = allTasks.filter(task => task.status === "in_progress")
+            const allSubtasks = allTasks.flatMap(task => task.subtasks)
+            const allItems = [...allTasks, ...allSubtasks]
+            
+            const completedItems = allItems.filter(item => item.status === "completed")
+            const inProgressItems = allItems.filter(item => item.status === "in_progress")
             const progressPercentage = getCategoryProgress(category.id)
             
             return (
@@ -43,13 +46,13 @@ export function ChartAreaInteractive() {
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-400" />
-                        {completedTasks.length} completed
+                        {completedItems.length} completed
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                        {inProgressTasks.length} in progress
+                        {inProgressItems.length} in progress
                       </div>
-                      <span>{allTasks.length} total</span>
+                      <span>{allItems.length} total items</span>
                     </div>
                   </div>
                   <div className="text-right space-y-1">
@@ -64,15 +67,18 @@ export function ChartAreaInteractive() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                   {category.subcategories.map((sub) => {
-                    const subCompleted = sub.tasks.filter(task => task.status === "completed").length
-                    const subProgress = Math.round((subCompleted / sub.tasks.length) * 100)
+                    const subTasks = sub.tasks
+                    const subSubtasks = subTasks.flatMap(task => task.subtasks)
+                    const subAllItems = [...subTasks, ...subSubtasks]
+                    const subCompleted = subAllItems.filter(item => item.status === "completed").length
+                    const subProgress = subAllItems.length > 0 ? Math.round((subCompleted / subAllItems.length) * 100) : 0
                     
                     return (
                       <div key={sub.id} className="p-3 rounded bg-background/50 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="truncate pr-2 text-muted-foreground font-medium">{sub.name}</span>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs font-semibold">{subCompleted}/{sub.tasks.length}</span>
+                            <span className="text-xs font-semibold">{subCompleted}/{subAllItems.length}</span>
                             {subProgress === 100 && (
                               <CheckCircle className="h-3 w-3 text-green-600" />
                             )}

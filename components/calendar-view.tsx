@@ -13,60 +13,122 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useData } from "@/contexts/data-context"
 import { CalendarEvent } from "@/components/calendar-event"
-import { Task } from "@/contexts/data-context"
+import { Task, Subtask } from "@/contexts/data-context"
+
+// Combined type for calendar events (both tasks and subtasks)
+type CalendarEventItem = {
+  id: string // 'task-123' or 'subtask-456'
+  type: 'task' | 'subtask'
+  name: string
+  status: string
+  priority: string
+  assignee: string | null
+  dueDate: string | null
+  category: string
+  subcategory: string
+  parentTaskName?: string // For subtasks only
+}
 
 interface CalendarDay {
   date: Date
   isCurrentMonth: boolean
-  tasks: Array<Task & { category: string; subcategory: string }>
+  events: CalendarEventItem[] // Now contains both tasks and subtasks
 }
 
-export function CalendarView() {
-  const { getUpcomingTasksByDueDate, getTeamMembers } = useData()
+interface CalendarViewProps {
+  // Props from parent component for subtask editing
+  updateSubtaskStatus?: (subtaskId: number, status: string) => void
+  updateSubtaskAssignee?: (subtaskId: number, assignee: string | null) => void
+  updateSubtaskDueDate?: (subtaskId: number, dueDate: string | null) => void
+  updateSubtaskName?: (subtaskId: number, name: string) => void
+  updateSubtaskPriority?: (subtaskId: number, priority: string) => void
+  getSubtaskById?: (subtaskId: number) => Subtask | null
+}
+
+export function CalendarView({
+  updateSubtaskStatus,
+  updateSubtaskAssignee,
+  updateSubtaskDueDate,
+  updateSubtaskName,
+  updateSubtaskPriority,
+  getSubtaskById
+}: CalendarViewProps = {}) {
+  const { getUpcomingTasksByDueDate, getUpcomingSubtasksByDueDate, getTeamMembers } = useData()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all")
   const [showCompleted, setShowCompleted] = useState(true)
   
-  // Get all tasks with due dates and apply filters
-  const tasksWithDueDates = useMemo(() => {
+  // Get all tasks and subtasks with due dates and apply filters
+  const allEventsWithDueDates = useMemo(() => {
     const allTasks = getUpcomingTasksByDueDate(1000) // Get all tasks with due dates
+    const allSubtasks = getUpcomingSubtasksByDueDate(1000) // Get all subtasks with due dates
     
-    return allTasks.filter(task => {
+    // Convert tasks to CalendarEventItem format
+    const taskEvents: CalendarEventItem[] = allTasks.map(task => ({
+      id: `task-${task.id}`,
+      type: 'task' as const,
+      name: task.name,
+      status: task.status,
+      priority: task.priority,
+      assignee: task.assignee,
+      dueDate: task.dueDate,
+      category: task.category,
+      subcategory: task.subcategory
+    }))
+    
+    // Convert subtasks to CalendarEventItem format
+    const subtaskEvents: CalendarEventItem[] = allSubtasks.map(subtask => ({
+      id: `subtask-${subtask.id}`,
+      type: 'subtask' as const,
+      name: subtask.name,
+      status: subtask.status,
+      priority: subtask.priority,
+      assignee: subtask.assignee,
+      dueDate: subtask.dueDate,
+      category: subtask.category,
+      subcategory: subtask.subcategory,
+      parentTaskName: subtask.taskName
+    }))
+    
+    // Combine and filter
+    const allEvents = [...taskEvents, ...subtaskEvents]
+    
+    return allEvents.filter(event => {
       // Status filter
-      if (statusFilter !== "all" && task.status !== statusFilter) return false
+      if (statusFilter !== "all" && event.status !== statusFilter) return false
       
       // Priority filter
-      if (priorityFilter !== "all" && task.priority !== priorityFilter) return false
+      if (priorityFilter !== "all" && event.priority !== priorityFilter) return false
       
       // Assignee filter
       if (assigneeFilter !== "all") {
-        if (assigneeFilter === "unassigned" && task.assignee !== null) return false
-        if (assigneeFilter !== "unassigned" && task.assignee !== assigneeFilter) return false
+        if (assigneeFilter === "unassigned" && event.assignee !== null) return false
+        if (assigneeFilter !== "unassigned" && event.assignee !== assigneeFilter) return false
       }
       
       // Show completed filter
-      if (!showCompleted && task.status === "completed") return false
+      if (!showCompleted && event.status === "completed") return false
       
       return true
     })
-  }, [getUpcomingTasksByDueDate, statusFilter, priorityFilter, assigneeFilter, showCompleted])
+  }, [getUpcomingTasksByDueDate, getUpcomingSubtasksByDueDate, statusFilter, priorityFilter, assigneeFilter, showCompleted])
 
-  // Group tasks by date
-  const tasksByDate = useMemo(() => {
-    const grouped: Record<string, Array<Task & { category: string; subcategory: string }>> = {}
+  // Group events (tasks + subtasks) by date
+  const eventsByDate = useMemo(() => {
+    const grouped: Record<string, CalendarEventItem[]> = {}
     
-    tasksWithDueDates.forEach(task => {
-      if (task.dueDate) {
+    allEventsWithDueDates.forEach(event => {
+      if (event.dueDate) {
         try {
-          const date = parseISO(task.dueDate)
+          const date = parseISO(event.dueDate)
           if (isValid(date)) {
             const dateKey = format(date, "yyyy-MM-dd")
             if (!grouped[dateKey]) {
               grouped[dateKey] = []
             }
-            grouped[dateKey].push(task)
+            grouped[dateKey].push(event)
           }
         } catch {
           // Skip invalid dates
@@ -75,7 +137,7 @@ export function CalendarView() {
     })
     
     return grouped
-  }, [tasksWithDueDates])
+  }, [allEventsWithDueDates])
 
   // Calculate calendar grid
   const calendarDays = useMemo(() => {
@@ -89,19 +151,19 @@ export function CalendarView() {
     
     while (day <= calendarEnd) {
       const dateKey = format(day, "yyyy-MM-dd")
-      const dayTasks = tasksByDate[dateKey] || []
+      const dayEvents = eventsByDate[dateKey] || []
       
       days.push({
         date: new Date(day),
         isCurrentMonth: isSameMonth(day, currentDate),
-        tasks: dayTasks
+        events: dayEvents
       })
       
       day = addDays(day, 1)
     }
     
     return days
-  }, [currentDate, tasksByDate])
+  }, [currentDate, eventsByDate])
 
   // Navigation handlers
   const goToPreviousMonth = useCallback(() => {
@@ -129,10 +191,9 @@ export function CalendarView() {
   // Get unique assignees for filter dropdown
   const teamMembers = useMemo(() => getTeamMembers(), [getTeamMembers])
   const uniqueAssignees = useMemo(() => {
-    const allTasks = getUpcomingTasksByDueDate(1000)
-    const assignees = new Set(allTasks.map(t => t.assignee).filter(Boolean) as string[])
+    const assignees = new Set(allEventsWithDueDates.map(e => e.assignee).filter(Boolean) as string[])
     return Array.from(assignees).sort()
-  }, [getUpcomingTasksByDueDate])
+  }, [allEventsWithDueDates])
 
   // Calculate weeks for the grid
   const weeks = useMemo(() => {
@@ -143,24 +204,24 @@ export function CalendarView() {
     return result
   }, [calendarDays])
 
-  // Summary statistics for current month
+  // Summary statistics for current month (tasks + subtasks)
   const monthStats = useMemo(() => {
-    const currentMonthTasks = calendarDays
+    const currentMonthEvents = calendarDays
       .filter(day => day.isCurrentMonth)
-      .flatMap(day => day.tasks)
+      .flatMap(day => day.events)
     
     return {
-      total: currentMonthTasks.length,
-      completed: currentMonthTasks.filter(t => t.status === "completed").length,
-      inProgress: currentMonthTasks.filter(t => t.status === "in_progress").length,
-      pending: currentMonthTasks.filter(t => t.status === "pending").length,
-      overdue: currentMonthTasks.filter(t => {
-        if (!t.dueDate) return false
+      total: currentMonthEvents.length,
+      completed: currentMonthEvents.filter(e => e.status === "completed").length,
+      inProgress: currentMonthEvents.filter(e => e.status === "in_progress").length,
+      pending: currentMonthEvents.filter(e => e.status === "pending").length,
+      overdue: currentMonthEvents.filter(e => {
+        if (!e.dueDate) return false
         try {
-          const dueDate = parseISO(t.dueDate)
+          const dueDate = parseISO(e.dueDate)
           const today = new Date()
           today.setHours(0, 0, 0, 0)
-          return isValid(dueDate) && dueDate < today && t.status !== "completed"
+          return isValid(dueDate) && dueDate < today && e.status !== "completed"
         } catch {
           return false
         }
@@ -217,7 +278,7 @@ export function CalendarView() {
               <div className="flex items-center gap-6 text-sm border rounded-md px-3 py-1.5">
                 <div className="flex items-center gap-1">
                   <span className="font-medium">{monthStats.total}</span>
-                  <span className="text-muted-foreground">tasks</span>
+                  <span className="text-muted-foreground">items</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="font-medium text-green-600">{monthStats.completed}</span>
@@ -350,9 +411,13 @@ export function CalendarView() {
             {weeks.map((week, weekIndex) =>
               week.map((day, dayIndex) => {
                 const isCurrentDay = isToday(day.date)
-                const hasEvents = day.tasks.length > 0
-                const visibleEvents = day.tasks.slice(0, 3) // Show max 3 events
-                const hiddenCount = Math.max(0, day.tasks.length - 3)
+                const hasEvents = day.events.length > 0
+                const visibleEvents = day.events.slice(0, 3) // Show max 3 events
+                const hiddenCount = Math.max(0, day.events.length - 3)
+                
+                // Group events by type for display
+                const taskEvents = day.events.filter(e => e.type === 'task')
+                const subtaskEvents = day.events.filter(e => e.type === 'subtask')
 
                 return (
                   <div
@@ -377,18 +442,27 @@ export function CalendarView() {
                         </span>
                         {hasEvents && (
                           <Badge variant="secondary" className="h-5 text-xs px-1.5">
-                            {day.tasks.length}
+                            {taskEvents.length > 0 && subtaskEvents.length > 0
+                              ? `${taskEvents.length}t, ${subtaskEvents.length}s`
+                              : day.events.length}
                           </Badge>
                         )}
                       </div>
                       
-                      {/* Task events */}
+                      {/* Calendar events (tasks + subtasks) */}
                       <div className="space-y-1">
-                        {visibleEvents.map((task, index) => (
+                        {visibleEvents.map((event, index) => (
                           <CalendarEvent
-                            key={`${task.id}-${index}`}
-                            task={task}
+                            key={`${event.id}-${index}`}
+                            event={event}
                             compact={true}
+                            // Pass subtask functions for editing
+                            updateSubtaskStatus={updateSubtaskStatus}
+                            updateSubtaskAssignee={updateSubtaskAssignee}
+                            updateSubtaskDueDate={updateSubtaskDueDate}
+                            updateSubtaskName={updateSubtaskName}
+                            updateSubtaskPriority={updateSubtaskPriority}
+                            getSubtaskById={getSubtaskById}
                           />
                         ))}
                         

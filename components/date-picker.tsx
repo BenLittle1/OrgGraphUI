@@ -77,7 +77,7 @@ export function DatePicker({
           size="sm"
           disabled={disabled}
           className={cn(
-            "justify-between font-normal h-8 min-w-[120px] pl-3 pr-2 py-1.5 hover:bg-accent/50 text-xs",
+            "justify-between font-normal !h-7 min-w-[120px] pl-3 pr-2 py-0 hover:bg-accent/50 text-xs flex items-center leading-none",
             !selectedDate && "text-muted-foreground border-dashed",
             isOverdue && "border-red-300 bg-red-50 text-red-700 hover:bg-red-100",
             isDueToday && "border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100",

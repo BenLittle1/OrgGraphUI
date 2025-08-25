@@ -17,7 +17,7 @@ import { TaskItem } from "@/components/task-item"
 import { AddTaskDialog } from "@/components/add-task-dialog"
 import { EditCategoryDialog } from "@/components/edit-category-dialog"
 import { EditSubcategoryDialog } from "@/components/edit-subcategory-dialog"
-import { Category } from "@/contexts/data-context"
+import { Category, NewSubtaskData } from "@/contexts/data-context"
 import { CheckCircle, Clock, AlertTriangle, Plus, MoreHorizontal, Edit, Trash2 } from "lucide-react"
 
 interface CategorySectionProps {
@@ -26,9 +26,27 @@ interface CategorySectionProps {
   assignTaskToMember: (taskId: number, memberId: string | null) => void
   updateTaskDueDate: (taskId: number, dueDate: string | null) => void
   deleteTask: (taskId: number) => void
+  addSubtask: (taskId: number, subtaskData: NewSubtaskData) => void
+  updateSubtaskStatus: (subtaskId: number, newStatus: string) => void
+  updateSubtaskAssignee: (subtaskId: number, assignee: string | null) => void  
+  updateSubtaskDueDate: (subtaskId: number, dueDate: string | null) => void
+  deleteSubtask: (subtaskId: number) => void
+  getTaskCompletion: (taskId: number) => number
 }
 
-export function CategorySection({ category, updateTaskStatus, assignTaskToMember, updateTaskDueDate, deleteTask }: CategorySectionProps) {
+export function CategorySection({ 
+  category, 
+  updateTaskStatus, 
+  assignTaskToMember, 
+  updateTaskDueDate, 
+  deleteTask,
+  addSubtask,
+  updateSubtaskStatus,
+  updateSubtaskAssignee,
+  updateSubtaskDueDate,
+  deleteSubtask,
+  getTaskCompletion
+}: CategorySectionProps) {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
@@ -217,6 +235,12 @@ export function CategorySection({ category, updateTaskStatus, assignTaskToMember
                         assignTaskToMember={assignTaskToMember}
                         updateTaskDueDate={updateTaskDueDate}
                         deleteTask={deleteTask}
+                        addSubtask={addSubtask}
+                        updateSubtaskStatus={updateSubtaskStatus}
+                        updateSubtaskAssignee={updateSubtaskAssignee}
+                        updateSubtaskDueDate={updateSubtaskDueDate}
+                        deleteSubtask={deleteSubtask}
+                        getTaskCompletion={getTaskCompletion}
                       />
                     ))}
                     

@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 export interface GraphNode extends d3.SimulationNodeDatum {
   id: string;              // Unique identifier
   name: string;            // Display name
-  level: number;           // Hierarchy level (0 = root, 1 = category, 2 = subcategory, 3 = task)
+  level: number;           // Hierarchy level (0 = root, 1 = category, 2 = subcategory, 3 = task, 4 = subtask)
   completion: number;      // Progress value (0.0 to 1.0)
   weight: number;          // Node importance/size factor
   isLeaf: boolean;         // Whether this is a leaf node
@@ -23,12 +23,23 @@ export interface GraphData {
 }
 
 // Business process data interfaces
+interface Subtask {
+  id: number;
+  name: string;
+  status: string;
+  priority: string;
+  assignee: string | null;
+  dueDate: string | null;
+  tags?: string[];
+}
+
 interface Task {
   id: number;
   name: string;
   status: string; // Allow any status string from JSON
   priority: string; // Allow any priority string from JSON
   assignee: string | null;
+  subtasks: Subtask[];
 }
 
 interface Subcategory {
@@ -63,21 +74,42 @@ interface BusinessProcessData {
   };
 }
 
-// Calculate completion percentage for a set of tasks
+// Calculate completion percentage for a set of subtasks
+function calculateSubtaskCompletion(subtasks: Subtask[]): number {
+  if (subtasks.length === 0) return 0;
+  
+  const completedSubtasks = subtasks.filter(subtask => subtask.status === "completed").length;
+  const inProgressSubtasks = subtasks.filter(subtask => subtask.status === "in_progress").length;
+  
+  // Completed subtasks = 1.0, in progress = 0.5, pending = 0.0
+  return (completedSubtasks + inProgressSubtasks * 0.5) / subtasks.length;
+}
+
+// Calculate completion percentage for a set of tasks (with subtask-aware logic)
 function calculateTaskCompletion(tasks: Task[]): number {
   if (tasks.length === 0) return 0;
   
-  const completedTasks = tasks.filter(task => task.status === "completed").length;
-  const inProgressTasks = tasks.filter(task => task.status === "in_progress").length;
+  let totalCompletion = 0;
   
-  // Completed tasks = 1.0, in progress = 0.5, pending = 0.0
-  return (completedTasks + inProgressTasks * 0.5) / tasks.length;
+  tasks.forEach(task => {
+    if (task.subtasks && task.subtasks.length > 0) {
+      // If task has subtasks, calculate completion from subtasks
+      totalCompletion += calculateSubtaskCompletion(task.subtasks);
+    } else {
+      // If task has no subtasks, use task status
+      const taskCompletion = task.status === "completed" ? 1.0 : 
+                            task.status === "in_progress" ? 0.5 : 0.0;
+      totalCompletion += taskCompletion;
+    }
+  });
+  
+  return totalCompletion / tasks.length;
 }
 
 // Calculate weight based on task count and priority distribution
 function calculateWeight(
   taskCount: number, 
-  tasks?: Task[], 
+  tasks?: Task[] | Subtask[], 
   level: number = 1
 ): number {
   const baseWeight = Math.max(1, taskCount);
@@ -97,7 +129,7 @@ function calculateWeight(
   }, 0) / tasks.length;
   
   // Level multiplier: higher level = more important
-  const levelMultiplier = Math.max(1, 4 - level);
+  const levelMultiplier = Math.max(1, 5 - level);
   
   return baseWeight * priorityMultiplier * levelMultiplier;
 }
@@ -173,8 +205,16 @@ export function convertToGraphData(data: BusinessProcessData): GraphData {
       
       // Process each task
       subcategory.tasks.forEach(task => {
-        const taskCompletion = task.status.toLowerCase() === "completed" ? 1.0 : 
-                              task.status.toLowerCase() === "in_progress" ? 0.5 : 0.0;
+        let taskCompletion: number;
+        
+        if (task.subtasks && task.subtasks.length > 0) {
+          // If task has subtasks, calculate completion from subtasks
+          taskCompletion = calculateSubtaskCompletion(task.subtasks);
+        } else {
+          // If task has no subtasks, use task status
+          taskCompletion = task.status.toLowerCase() === "completed" ? 1.0 : 
+                          task.status.toLowerCase() === "in_progress" ? 0.5 : 0.0;
+        }
         
         const taskNode: GraphNode = {
           id: `task-${task.id}`,
@@ -182,7 +222,7 @@ export function convertToGraphData(data: BusinessProcessData): GraphData {
           level: 3,
           completion: taskCompletion,
           weight: calculateWeight(1, [task], 3),
-          isLeaf: true,
+          isLeaf: !task.subtasks || task.subtasks.length === 0,
           originalNode: task,
         };
         nodes.push(taskNode);
@@ -193,6 +233,32 @@ export function convertToGraphData(data: BusinessProcessData): GraphData {
           target: taskNode.id,
           strength: 1 / 3, // Weaker links for deeper levels
         });
+        
+        // Process each subtask
+        if (task.subtasks && task.subtasks.length > 0) {
+          task.subtasks.forEach(subtask => {
+            const subtaskCompletion = subtask.status.toLowerCase() === "completed" ? 1.0 : 
+                                     subtask.status.toLowerCase() === "in_progress" ? 0.5 : 0.0;
+            
+            const subtaskNode: GraphNode = {
+              id: `subtask-${subtask.id}`,
+              name: subtask.name,
+              level: 4,
+              completion: subtaskCompletion,
+              weight: calculateWeight(1, [subtask], 4),
+              isLeaf: true,
+              originalNode: subtask,
+            };
+            nodes.push(subtaskNode);
+            
+            // Link task to subtask
+            links.push({
+              source: taskNode.id,
+              target: subtaskNode.id,
+              strength: 1 / 4, // Weaker links for deeper levels
+            });
+          });
+        }
       });
     });
   });
@@ -221,10 +287,18 @@ export function getCompletionColor(percentage: number): string {
 
 // Helper function to calculate node radius
 export function getNodeRadius(node: GraphNode): number {
+  // Smaller radius for subtasks (level 4)
+  if (node.level === 4) {
+    return Math.max(8, Math.sqrt(node.weight) * 4);
+  }
   return Math.max(12, Math.sqrt(node.weight) * 6);
 }
 
 // Helper function to calculate collision radius (slightly larger than visual)
 export function getCollisionRadius(node: GraphNode): number {
+  // Smaller collision radius for subtasks (level 4)
+  if (node.level === 4) {
+    return Math.max(12, Math.sqrt(node.weight) * 4 + 3);
+  }
   return Math.max(15, Math.sqrt(node.weight) * 6 + 4);
 }

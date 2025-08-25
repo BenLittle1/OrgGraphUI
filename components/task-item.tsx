@@ -16,8 +16,10 @@ import {
 import { AssigneeSelect } from "@/components/assignee-select"
 import { DatePicker } from "@/components/date-picker"
 import { EditTaskDialog } from "@/components/edit-task-dialog"
-import { Task } from "@/contexts/data-context"
-import { User, MoreHorizontal, Edit, Calendar, Clock, AlertTriangle, Trash2 } from "lucide-react"
+import { AddSubtaskDialog } from "@/components/add-subtask-dialog"
+import { SubtaskList } from "@/components/subtask-list"
+import { Task, NewSubtaskData } from "@/contexts/data-context"
+import { User, MoreHorizontal, Edit, Calendar, Clock, AlertTriangle, Trash2, ChevronDown, ChevronRight, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format, isValid, parseISO, differenceInDays } from "date-fns"
 
@@ -27,13 +29,37 @@ interface TaskItemProps {
   assignTaskToMember: (taskId: number, memberId: string | null) => void
   updateTaskDueDate: (taskId: number, dueDate: string | null) => void
   deleteTask: (taskId: number) => void
+  addSubtask: (taskId: number, subtaskData: NewSubtaskData) => void
+  updateSubtaskStatus: (subtaskId: number, newStatus: string) => void
+  updateSubtaskAssignee: (subtaskId: number, assignee: string | null) => void  
+  updateSubtaskDueDate: (subtaskId: number, dueDate: string | null) => void
+  deleteSubtask: (subtaskId: number) => void
+  getTaskCompletion: (taskId: number) => number
 }
 
-export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTaskDueDate, deleteTask }: TaskItemProps) {
+export function TaskItem({ 
+  task, 
+  updateTaskStatus, 
+  assignTaskToMember, 
+  updateTaskDueDate, 
+  deleteTask,
+  addSubtask,
+  updateSubtaskStatus,
+  updateSubtaskAssignee,
+  updateSubtaskDueDate,
+  deleteSubtask,
+  getTaskCompletion
+}: TaskItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isSubtasksExpanded, setIsSubtasksExpanded] = useState(task.subtasks.length > 0)
 
-  const handleStatusChange = (checked: boolean) => {
-    const newStatus = checked ? "completed" : "pending"
+  const handleStatusChange = (checked: boolean | "indeterminate") => {
+    // Don't allow direct task status changes if task has subtasks
+    if (task.subtasks.length > 0) {
+      return // Prevent checkbox toggle when task has subtasks
+    }
+    
+    const newStatus = checked === true ? "completed" : "pending"
     updateTaskStatus(task.id, newStatus)
   }
 
@@ -134,20 +160,51 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTas
     setShowDeleteConfirm(false)
   }
 
+  // Calculate task completion based on subtasks if they exist
+  const taskCompletion = getTaskCompletion(task.id)
+  const hasSubtasks = task.subtasks.length > 0
+  
+  // Determine checkbox state based on completion
+  const getCheckboxState = () => {
+    if (!hasSubtasks) {
+      return task.status === "completed"
+    }
+    
+    if (taskCompletion === 1.0) return true
+    if (taskCompletion > 0) return "indeterminate"
+    return false
+  }
+
+  // Get subtask count display text
+  const getSubtaskCountText = () => {
+    if (!hasSubtasks) return null
+    
+    const completedCount = task.subtasks.filter(st => st.status === "completed").length
+    const totalCount = task.subtasks.length
+    const subtaskText = totalCount === 1 ? "subtask" : "subtasks"
+    
+    return `${totalCount} ${subtaskText}${completedCount > 0 ? ` • ${completedCount} complete` : ''}`
+  }
+
   return (
-    <div
-      className={cn(
-        "flex items-center gap-3 p-3 rounded-lg border transition-all hover:bg-muted/50",
-        task.status === "completed" && "opacity-75 bg-green-50/50",
-        dueDateInfo && dueDateInfo.status === "overdue" && "border-red-200 bg-red-50/30",
-        dueDateInfo && dueDateInfo.status === "due-today" && "border-orange-200 bg-orange-50/30"
-      )}
-    >
+    <div className="mb-3">
+      <div
+        className={cn(
+          "border rounded-lg transition-all",
+          task.status === "completed" && "opacity-75 bg-green-50/50",
+          dueDateInfo && dueDateInfo.status === "overdue" && "border-red-200 bg-red-50/30",
+          dueDateInfo && dueDateInfo.status === "due-today" && "border-orange-200 bg-orange-50/30",
+          hasSubtasks && isSubtasksExpanded && "rounded-b-none"
+        )}
+      >
+        <div className="flex items-center gap-3 p-3 hover:bg-muted/50 transition-all">
       {/* Checkbox */}
       <Checkbox
-        checked={task.status === "completed"}
+        checked={getCheckboxState()}
         onCheckedChange={handleStatusChange}
         className="shrink-0"
+        disabled={hasSubtasks} // Disable when task has subtasks
+        aria-label={hasSubtasks ? "Task completion managed by subtasks" : "Toggle task completion"}
       />
 
       {/* Task Content */}
@@ -155,15 +212,16 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTas
         <div className="flex items-center gap-2">
           <div className={cn(
             "font-medium",
-            task.status === "completed" && "line-through text-muted-foreground"
+            (task.status === "completed" || taskCompletion === 1.0) && "line-through text-muted-foreground"
           )}>
             {task.name}
           </div>
           
-          {/* Priority Badge */}
-          <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
+          {/* Priority Badge - Right next to task name */}
+          <Badge variant="outline" className={cn("text-xs shrink-0", getPriorityColor(task.priority))}>
             {task.priority}
           </Badge>
+
         </div>
         
         <div className="flex items-center gap-2 mt-1">
@@ -172,7 +230,7 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTas
             date={task.dueDate}
             onDateChange={handleDueDateChange}
             placeholder="Set due date"
-            className="!h-8 text-xs min-w-[120px]"
+            className="text-xs min-w-[120px]"
           />
           
           {/* Assignee */}
@@ -186,6 +244,24 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTas
 
       {/* Status Quick Actions */}
       <div className="flex items-center gap-1 shrink-0">
+        {/* Add Subtask Button */}
+        <AddSubtaskDialog
+          taskId={task.id}
+          taskName={task.name}
+          addSubtask={addSubtask}
+          trigger={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-xs"
+              title="Add Subtask"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Subtask
+            </Button>
+          }
+        />
+
         <Select value={task.status} onValueChange={handleStatusSelect}>
           <SelectTrigger className="w-auto h-8 text-xs border-none shadow-none">
             <SelectValue />
@@ -279,6 +355,21 @@ export function TaskItem({ task, updateTaskStatus, assignTaskToMember, updateTas
             </div>
           </DialogContent>
         </Dialog>
+      </div>
+        </div>
+
+        {/* Subtask List */}
+        {hasSubtasks && (
+          <SubtaskList
+            taskId={task.id}
+            subtasks={task.subtasks}
+            isExpanded={isSubtasksExpanded}
+            updateSubtaskStatus={updateSubtaskStatus}
+            updateSubtaskAssignee={updateSubtaskAssignee}
+            updateSubtaskDueDate={updateSubtaskDueDate}
+            deleteSubtask={deleteSubtask}
+          />
+        )}
       </div>
     </div>
   )

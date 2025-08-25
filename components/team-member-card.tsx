@@ -174,7 +174,7 @@ export function TeamMemberCard({ member, onViewDetails }: TeamMemberCardProps) {
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium">Task Progress</span>
             <span className="text-sm text-muted-foreground">
-              {progress.completed}/{progress.total} tasks
+              {progress.completed}/{progress.total} items
             </span>
           </div>
           <Progress value={progress.percentage} className="h-2" />

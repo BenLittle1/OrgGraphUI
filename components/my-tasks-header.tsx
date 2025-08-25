@@ -6,12 +6,17 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Task } from "@/contexts/data-context"
+import { Task, Subtask } from "@/contexts/data-context"
+
+// Mixed item type for tasks and subtasks
+type TaskWithContext = Task & { category: string; subcategory: string; type: 'task' }
+type SubtaskWithContext = Subtask & { taskName: string; category: string; subcategory: string; type: 'subtask' }
+type MixedItem = TaskWithContext | SubtaskWithContext
 import { parseISO, isValid, differenceInDays } from "date-fns"
 
 interface MyTasksHeaderProps {
-  tasks: Array<Task & { category: string; subcategory: string }>
-  filteredTasks: Array<Task & { category: string; subcategory: string }>
+  items: MixedItem[]
+  filteredItems: MixedItem[]
   searchTerm: string
   setSearchTerm: (term: string) => void
   statusFilter: string
@@ -21,8 +26,8 @@ interface MyTasksHeaderProps {
 }
 
 export function MyTasksHeader({
-  tasks,
-  filteredTasks,
+  items,
+  filteredItems,
   searchTerm,
   setSearchTerm,
   statusFilter,
@@ -30,29 +35,29 @@ export function MyTasksHeader({
   priorityFilter,
   setPriorityFilter,
 }: MyTasksHeaderProps) {
-  // Calculate task statistics
-  const totalTasks = tasks.length
-  const completedTasks = tasks.filter(task => task.status === "completed").length
-  const inProgressTasks = tasks.filter(task => task.status === "in_progress").length
-  const highPriorityTasks = tasks.filter(task => task.priority === "high").length
+  // Calculate item statistics (both tasks and subtasks)
+  const totalItems = items.length
+  const completedItems = items.filter(item => item.status === "completed").length
+  const inProgressItems = items.filter(item => item.status === "in_progress").length
+  const highPriorityItems = items.filter(item => item.priority === "high").length
   
-  const completionPercentage = totalTasks > 0 
-    ? Math.round((completedTasks / totalTasks) * 100)
+  const completionPercentage = totalItems > 0 
+    ? Math.round((completedItems / totalItems) * 100)
     : 0
 
-  // Calculate overdue tasks
+  // Calculate overdue items
   const now = new Date()
-  const overdueTasks = tasks.filter(task => {
-    if (!task.dueDate) return false
-    const dueDate = parseISO(task.dueDate)
-    return isValid(dueDate) && differenceInDays(dueDate, now) < 0 && task.status !== "completed"
+  const overdueItems = items.filter(item => {
+    if (!item.dueDate) return false
+    const dueDate = parseISO(item.dueDate)
+    return isValid(dueDate) && differenceInDays(dueDate, now) < 0 && item.status !== "completed"
   }).length
 
-  // Calculate due today tasks
-  const dueTodayTasks = tasks.filter(task => {
-    if (!task.dueDate) return false
-    const dueDate = parseISO(task.dueDate)
-    return isValid(dueDate) && differenceInDays(dueDate, now) === 0 && task.status !== "completed"
+  // Calculate due today items
+  const dueTodayItems = items.filter(item => {
+    if (!item.dueDate) return false
+    const dueDate = parseISO(item.dueDate)
+    return isValid(dueDate) && differenceInDays(dueDate, now) === 0 && item.status !== "completed"
   }).length
 
   return (
@@ -62,11 +67,11 @@ export function MyTasksHeader({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Items</CardTitle>
               <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalTasks}</div>
+              <div className="text-2xl font-bold">{totalItems}</div>
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 <Progress value={completionPercentage} className="flex-1" />
                 <span>{completionPercentage}% complete</span>
@@ -80,9 +85,9 @@ export function MyTasksHeader({
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{inProgressTasks}</div>
+              <div className="text-2xl font-bold text-blue-600">{inProgressItems}</div>
               <p className="text-xs text-muted-foreground">
-                Active tasks
+                Active items
               </p>
             </CardContent>
           </Card>
@@ -93,21 +98,21 @@ export function MyTasksHeader({
               <AlertTriangle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{highPriorityTasks}</div>
+              <div className="text-2xl font-bold text-red-600">{highPriorityItems}</div>
               <p className="text-xs text-muted-foreground">
-                Urgent tasks
+                Urgent items
               </p>
             </CardContent>
           </Card>
 
-          {overdueTasks > 0 && (
+          {overdueItems > 0 && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Overdue</CardTitle>
                 <AlertTriangle className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{overdueTasks}</div>
+                <div className="text-2xl font-bold text-red-600">{overdueItems}</div>
                 <p className="text-xs text-muted-foreground">
                   Requires attention
                 </p>
@@ -115,14 +120,14 @@ export function MyTasksHeader({
             </Card>
           )}
 
-          {dueTodayTasks > 0 && (
+          {dueTodayItems > 0 && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Due Today</CardTitle>
                 <AlertTriangle className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{dueTodayTasks}</div>
+                <div className="text-2xl font-bold text-orange-600">{dueTodayItems}</div>
                 <p className="text-xs text-muted-foreground">
                   Due today
                 </p>
@@ -136,9 +141,9 @@ export function MyTasksHeader({
               <CheckCircle2 className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{completedTasks}</div>
+              <div className="text-2xl font-bold text-green-600">{completedItems}</div>
               <p className="text-xs text-muted-foreground">
-                Finished tasks
+                Finished items
               </p>
             </CardContent>
           </Card>
@@ -154,7 +159,7 @@ export function MyTasksHeader({
               <div className="relative flex-1">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search tasks..."
+                  placeholder="Search tasks and subtasks..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
@@ -188,7 +193,7 @@ export function MyTasksHeader({
 
             {/* Filter Summary */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Showing {filteredTasks.length} of {totalTasks} tasks</span>
+              <span>Showing {filteredItems.length} of {totalItems} items</span>
               {(statusFilter !== "all" || priorityFilter !== "all" || searchTerm) && (
                 <Badge variant="secondary" className="ml-2">
                   Filtered

@@ -9,7 +9,19 @@ import { CategorySection } from "@/components/category-section"
 import { useData, type Category, type Subcategory } from "@/contexts/data-context"
 
 export default function ChecklistPage() {
-  const { data, updateTaskStatus, assignTaskToMember, updateTaskDueDate, deleteTask } = useData()
+  const { 
+    data, 
+    updateTaskStatus, 
+    assignTaskToMember, 
+    updateTaskDueDate, 
+    deleteTask,
+    addSubtask,
+    updateSubtaskStatus,
+    updateSubtaskAssignee,
+    updateSubtaskDueDate,
+    deleteSubtask,
+    getTaskCompletion
+  } = useData()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
@@ -23,10 +35,22 @@ export default function ChecklistPage() {
 
     const filteredSubcategories = category.subcategories.map(subcategory => {
       const filteredTasks = subcategory.tasks.filter(task => {
-        const matchesSearch = task.name.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesStatus = statusFilter === "all" || task.status === statusFilter
-        const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter
-        return matchesSearch && matchesStatus && matchesPriority
+        // Check if task matches filters
+        const taskMatchesSearch = task.name.toLowerCase().includes(searchTerm.toLowerCase())
+        const taskMatchesStatus = statusFilter === "all" || task.status === statusFilter
+        const taskMatchesPriority = priorityFilter === "all" || task.priority === priorityFilter
+        const taskMatches = taskMatchesSearch && taskMatchesStatus && taskMatchesPriority
+        
+        // Check if any subtask matches filters
+        const subtaskMatches = task.subtasks?.some(subtask => {
+          const subtaskMatchesSearch = subtask.name.toLowerCase().includes(searchTerm.toLowerCase())
+          const subtaskMatchesStatus = statusFilter === "all" || subtask.status === statusFilter
+          const subtaskMatchesPriority = priorityFilter === "all" || subtask.priority === priorityFilter
+          return subtaskMatchesSearch && subtaskMatchesStatus && subtaskMatchesPriority
+        })
+        
+        // Include task if either task or any subtask matches
+        return taskMatches || subtaskMatches
       })
 
       return filteredTasks.length > 0 ? { ...subcategory, tasks: filteredTasks } : null
@@ -64,6 +88,12 @@ export default function ChecklistPage() {
                     assignTaskToMember={assignTaskToMember}
                     updateTaskDueDate={updateTaskDueDate}
                     deleteTask={deleteTask}
+                    addSubtask={addSubtask}
+                    updateSubtaskStatus={updateSubtaskStatus}
+                    updateSubtaskAssignee={updateSubtaskAssignee}
+                    updateSubtaskDueDate={updateSubtaskDueDate}
+                    deleteSubtask={deleteSubtask}
+                    getTaskCompletion={getTaskCompletion}
                   />
                 ))}
                 {filteredCategories.length === 0 && (

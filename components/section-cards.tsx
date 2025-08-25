@@ -116,7 +116,7 @@ export function SectionCards() {
                     <div className="text-2xl font-bold mb-2">{completionPercentage}%</div>
                     <Progress value={completionPercentage} className="h-2" />
                     <p className="text-xs text-muted-foreground mt-2">
-                      {data.summary.statusCounts.completed} of {data.summary.totalTasks} completed
+                      {data.summary.statusCounts.completed} of {data.summary.totalTasks} items completed
                     </p>
                   </>
                 )}

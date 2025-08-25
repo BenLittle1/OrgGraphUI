@@ -3,50 +3,107 @@
     {
       "id": 1,
       "name": "Corporate & Governance",
-      "totalTasks": 20,
+      "totalTasks": 56,
       "subcategories": [
         {
           "id": 1,
-          "name": "Business Formation & Legal",
+          "name": "Strategic Planning & Compliance",
           "tasks": [
-            {"id": 1, "name": "Business Plan Creation", "status": "completed", "priority": "high", "assignee": null},
-            {"id": 2, "name": "Legal Structure", "status": "completed", "priority": "high", "assignee": null},
-            {"id": 3, "name": "Name Registration", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 4, "name": "Trademark", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 5, "name": "Articles of Incorporation", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 6, "name": "Bylaws", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 7, "name": "Business Licenses & Permits", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 8, "name": "Regulatory & Industry-Specific Compliance", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 1, "name": "Business Plan Creation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 2, "name": "Trademark Registration", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 3, "name": "Regulatory & Industry-Specific Compliance", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
           "id": 2,
-          "name": "Investor Relations & Board Management",
+          "name": "Corporate Incorporation & Organization",
           "tasks": [
-            {"id": 9, "name": "Board of Directors Setup", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 10, "name": "Cap Table Management", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 11, "name": "Shareholder Agreements", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 12, "name": "Investor Reporting System", "status": "pending", "priority": "low", "assignee": null}
+            {"id": 4, "name": "Complete investor background checks", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 5, "name": "Complete investor due diligence", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 6, "name": "Finalize company name and conduct Nuans search", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 7, "name": "Select jurisdiction of incorporation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 8, "name": "Select registered office address", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 9, "name": "Draft and file Articles of Incorporation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 10, "name": "Adopt By-Law No. 1", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 11, "name": "Prepare and file Articles of Amendment for share structure", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 12, "name": "File for extra-provincial registration", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 13, "name": "Pass board resolutions for initial setup (by-laws, shares, officers, etc.)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 14, "name": "Accept Founder share subscriptions", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 15, "name": "Execute U of T share subscription form", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 16, "name": "Execute AXL share purchase agreement", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
           "id": 3,
-          "name": "Government Relations",
+          "name": "Key Agreements",
           "tasks": [
-            {"id": 13, "name": "Grant Strategy", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 17, "name": "Issue share certificates and receipts", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 18, "name": "Execute Founder Employment Agreements (with IP assignment)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 19, "name": "Execute Founder Restricted Share Agreements", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 20, "name": "Execute IP Assignment Agreement with U of T", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 21, "name": "Execute Shareholder Voting Agreement", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 22, "name": "Execute ROFR and Co-Sale Agreement", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 23, "name": "Ensure investor executes Shareholder Agreement Joinder", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 24, "name": "Collect Director Consent forms", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 25, "name": "Execute Director Indemnification Agreements", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
           "id": 4,
+          "name": "Initial Investment Transaction",
+          "tasks": [
+            {"id": 26, "name": "Ratify investment Term Sheet", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 27, "name": "Issue SAFE to investor", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 28, "name": "Obtain Private Issuer Exemption & Investor Certificate", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 29, "name": "Execute Services Agreement with AXL Labs", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 30, "name": "Issue Payment Direction for SAFE proceeds", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 31, "name": "Issue receipt for SAFE investment", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 32, "name": "Finalize post-closing Capitalization Table", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 33, "name": "Obtain shareholder waivers for SAFE issuance", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 34, "name": "Pass shareholder resolutions (approve by-laws, directors, waive auditor)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 35, "name": "Obtain waiver for sending financial statements", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
+          ]
+        },
+        {
+          "id": 5,
+          "name": "Post-Closing & Corporate Maintenance",
+          "tasks": [
+            {"id": 36, "name": "File Notice of Change for new directors", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 37, "name": "Update Directors' Register", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 38, "name": "Update Shareholder Ledgers and Registers", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 39, "name": "Assemble and maintain corporate Record Books", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 40, "name": "Secure D&O Insurance", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 41, "name": "Design and implement Stock Option Plan", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
+          ]
+        },
+        {
+          "id": 6,
+          "name": "Investor Relations & Board Management",
+          "tasks": [
+            {"id": 42, "name": "Board of Directors Setup", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 43, "name": "Cap Table Management", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 44, "name": "Shareholder Agreements", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 45, "name": "Investor Reporting System", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
+          ]
+        },
+        {
+          "id": 7,
+          "name": "Government Relations",
+          "tasks": [
+            {"id": 46, "name": "Grant Strategy", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
+          ]
+        },
+        {
+          "id": 8,
           "name": "Risk & Insurance",
           "tasks": [
-            {"id": 14, "name": "General Liability Insurance", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 15, "name": "Professional Liability Insurance", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 16, "name": "Cyber Liability Insurance", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 17, "name": "Workers' Compensation", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 18, "name": "Risk Assessment Framework", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 19, "name": "Business Continuity Plan", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 20, "name": "Crisis Management Plan", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 47, "name": "General Liability Insurance", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 48, "name": "Professional Liability Insurance", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 49, "name": "Cyber Liability Insurance", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 50, "name": "Workers' Compensation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 51, "name": "Risk Assessment Framework", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 52, "name": "Business Continuity Plan", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 53, "name": "Crisis Management Plan", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         }
       ]
@@ -57,33 +114,33 @@
       "totalTasks": 12,
       "subcategories": [
         {
-          "id": 5,
+          "id": 9,
           "name": "Financial Setup",
           "tasks": [
-            {"id": 21, "name": "Business Bank Account", "status": "completed", "priority": "high", "assignee": null},
-            {"id": 22, "name": "Business Credit Cards", "status": "completed", "priority": "medium", "assignee": null},
-            {"id": 23, "name": "Accounting Software Setup", "status": "in_progress", "priority": "high", "assignee": null},
-            {"id": 24, "name": "Chart of Accounts Setup", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 25, "name": "Expense Management System", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 54, "name": "Business Bank Account", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 55, "name": "Business Credit Cards", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 56, "name": "Accounting Software Setup", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 57, "name": "Chart of Accounts Setup", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 58, "name": "Expense Management System", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
-          "id": 6,
+          "id": 10,
           "name": "Accounting Processes",
           "tasks": [
-            {"id": 26, "name": "Monthly Bookkeeping", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 27, "name": "Financial Statement Preparation", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 28, "name": "Tax Preparation & Filing (including SR&ED)", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 29, "name": "Audit Preparation", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 59, "name": "Monthly Bookkeeping", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 60, "name": "Financial Statement Preparation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 61, "name": "Tax Preparation & Filing (including SR&ED)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 62, "name": "Audit Preparation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
-          "id": 7,
+          "id": 11,
           "name": "Financial Management",
           "tasks": [
-            {"id": 30, "name": "Budgeting & Forecasting", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 31, "name": "Cash Flow Management", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 32, "name": "Financial Reporting Dashboards", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 63, "name": "Budgeting & Forecasting", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 64, "name": "Cash Flow Management", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 65, "name": "Financial Reporting Dashboards", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         }
       ]
@@ -94,73 +151,64 @@
       "totalTasks": 10,
       "subcategories": [
         {
-          "id": 8,
+          "id": 12,
           "name": "Recruitment & Hiring",
           "tasks": [
-            {"id": 33, "name": "Recruitment Process & Interview Framework", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 34, "name": "Job Descriptions", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 35, "name": "Background Checks", "status": "pending", "priority": "low", "assignee": null}
+            {"id": 66, "name": "Recruitment Process & Interview Framework", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 67, "name": "Job Descriptions", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 68, "name": "Background Checks", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
-          "id": 9,
+          "id": 13,
           "name": "Employee Onboarding & Management",
           "tasks": [
-            {"id": 36, "name": "Onboarding Checklist", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 37, "name": "Employee Handbook", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 38, "name": "IT Setup & Access Management", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 39, "name": "Performance Review System", "status": "pending", "priority": "low", "assignee": null},
-            {"id": 40, "name": "Compensation & Benefits", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 41, "name": "Time Tracking", "status": "pending", "priority": "low", "assignee": null},
-            {"id": 42, "name": "Employee Development & Training Programs", "status": "pending", "priority": "low", "assignee": null}
+            {"id": 69, "name": "Onboarding Checklist", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 70, "name": "Employee Handbook", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 71, "name": "IT Setup & Access Management", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 72, "name": "Performance Review System", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 73, "name": "Compensation & Benefits", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 74, "name": "Time Tracking", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 75, "name": "Employee Development & Training Programs", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         }
       ]
     },
     {
       "id": 4,
-      "name": "Product, Technology & Operations",
-      "totalTasks": 17,
+      "name": "Product & Technology",
+      "totalTasks": 14,
       "subcategories": [
         {
-          "id": 10,
+          "id": 14,
           "name": "Product Management",
           "tasks": [
-            {"id": 43, "name": "Product Roadmap", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 44, "name": "Launch Strategy", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 45, "name": "Research Leveraged from UoT", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 76, "name": "Product Roadmap", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 77, "name": "Launch Strategy", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 78, "name": "Research Leveraged from UoT", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
-          "id": 11,
+          "id": 15,
           "name": "Technology & Development",
           "tasks": [
-            {"id": 46, "name": "Front-End Tech Stack", "status": "completed", "priority": "high", "assignee": null},
-            {"id": 47, "name": "Back-End Tech Stack", "status": "in_progress", "priority": "high", "assignee": null},
-            {"id": 48, "name": "Open Source Software & Dependency List", "status": "in_progress", "priority": "medium", "assignee": null},
-            {"id": 49, "name": "Development Process", "status": "in_progress", "priority": "high", "assignee": null},
-            {"id": 50, "name": "Quality Assurance", "status": "pending", "priority": "high", "assignee": null}
+            {"id": 79, "name": "Front-End Tech Stack", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 80, "name": "Back-End Tech Stack", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 81, "name": "Open Source Software & Dependency List", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 82, "name": "Development Process", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 83, "name": "Quality Assurance", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
-          "id": 12,
+          "id": 16,
           "name": "IT, Security & IP",
           "tasks": [
-            {"id": 51, "name": "IT Security Framework", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 52, "name": "IP Strategy (Patents, Trade Secrets)", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 53, "name": "Data Management Strategy", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 54, "name": "Data Backup & Recovery Strategy", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 55, "name": "Cloud/Compute Strategy", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 56, "name": "Software License Management", "status": "pending", "priority": "medium", "assignee": null}
-          ]
-        },
-        {
-          "id": 13,
-          "name": "Operations Management",
-          "tasks": [
-            {"id": 57, "name": "Supply Chain Management", "status": "pending", "priority": "low", "assignee": null},
-            {"id": 58, "name": "Vendor Management", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 59, "name": "Process Documentation", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 84, "name": "IT Security Framework", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 85, "name": "IP Strategy (Patents, Trade Secrets)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 86, "name": "Data Management Strategy", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 87, "name": "Data Backup & Recovery Strategy", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 88, "name": "Cloud/Compute Strategy", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 89, "name": "Software License Management", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         }
       ]
@@ -168,43 +216,113 @@
     {
       "id": 5,
       "name": "Go-To-Market (GTM)",
-      "totalTasks": 19,
+      "totalTasks": 54,
       "subcategories": [
         {
-          "id": 14,
-          "name": "Marketing Strategy",
+          "id": 17,
+          "name": "GTM Strategy & Positioning",
           "tasks": [
-            {"id": 60, "name": "Name", "status": "completed", "priority": "high", "assignee": null},
-            {"id": 61, "name": "Logo", "status": "completed", "priority": "high", "assignee": null},
-            {"id": 62, "name": "Mission", "status": "completed", "priority": "high", "assignee": null},
-            {"id": 63, "name": "Vision", "status": "in_progress", "priority": "high", "assignee": null},
-            {"id": 64, "name": "Positioning", "status": "in_progress", "priority": "high", "assignee": null},
-            {"id": 65, "name": "Target Market (ICP)", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 66, "name": "Competitive Analysis", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 67, "name": "Marketing Plan", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 68, "name": "Marketing Budget", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 90, "name": "Market Opportunity Analysis", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 91, "name": "Total Addressable Market (TAM)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 92, "name": "Serviceable Addressable Market (SAM)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 93, "name": "Serviceable Obtainable Market (SOM)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 94, "name": "Industry Trends", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 95, "name": "Competitive Landscape", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1001, "name": "Top Alternatives", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1002, "name": "Emerging Alternatives", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1003, "name": "Comparative Strengths/Weaknesses", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 96, "name": "Value Proposition", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1004, "name": "Features", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1005, "name": "Outcomes", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1006, "name": "Differentiators", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 97, "name": "Messaging & Positioning Hierarchy", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 98, "name": "Marketing Plan", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 99, "name": "Marketing Budget", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 100, "name": "Mission", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 101, "name": "Vision", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
-          "id": 15,
-          "name": "Online Presence & Campaigns",
+          "id": 18,
+          "name": "Branding & Identity",
           "tasks": [
-            {"id": 69, "name": "Website Development", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 70, "name": "SEO", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 71, "name": "Social Media", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 72, "name": "Content Marketing", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 73, "name": "Digital Advertising (e.g., AdWords)", "status": "pending", "priority": "low", "assignee": null}
+            {"id": 102, "name": "Name", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 103, "name": "Logo", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 104, "name": "Naming Guidelines", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 105, "name": "Visual Identity", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 106, "name": "Positioning", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
-          "id": 16,
-          "name": "Sales Enablement",
+          "id": 19,
+          "name": "Ideal Customer & Buyer Personas",
           "tasks": [
-            {"id": 74, "name": "Pitch Deck", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 75, "name": "One-Pagers", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 76, "name": "White Papers", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 77, "name": "BDR Kit", "status": "pending", "priority": "low", "assignee": null},
-            {"id": 78, "name": "Analyst Relations (e.g., Gartner)", "status": "pending", "priority": "low", "assignee": null}
+            {"id": 107, "name": "Ideal Customer Profile (ICP)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1007, "name": "Firmographics", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1008, "name": "Pain Points", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1009, "name": "Trigger Events", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 108, "name": "Buyer Personas", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1010, "name": "Job Role", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1011, "name": "Goals", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1012, "name": "Influences", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1013, "name": "Priorities", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 109, "name": "Decision Criteria", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1014, "name": "Requirements", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1015, "name": "Objections", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]}
+          ]
+        },
+        {
+          "id": 20,
+          "name": "Demand Generation",
+          "tasks": [
+            {"id": 110, "name": "Demand Engine", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 111, "name": "Inbound", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1016, "name": "Website CRO", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1017, "name": "Search (Paid, Organic)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1018, "name": "Social Media (Paid, Organic)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1019, "name": "Digital Advertising", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 112, "name": "Marketing Content", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1020, "name": "Website", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1021, "name": "Thought Leadership", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1022, "name": "Social Proof", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1023, "name": "Overview Video", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1024, "name": "Recorded Demo", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 113, "name": "Outbound", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1025, "name": "Data", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1026, "name": "Messaging", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1027, "name": "Channels", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1028, "name": "Process", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 114, "name": "Referral (Partner)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1029, "name": "Ideal Partner Profile", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1030, "name": "Motivations Matrix", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1031, "name": "Enablement Strategy", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1032, "name": "Revenue Sharing Model", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1033, "name": "Joint Campaigns", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 115, "name": "Referral (Customer)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1034, "name": "Incentives", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1035, "name": "Process", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 116, "name": "Referral (Employee)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1036, "name": "Board Network", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1037, "name": "Executive Network", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1038, "name": "Employee Network", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]}
+          ]
+        },
+        {
+          "id": 21,
+          "name": "Pricing & Packaging",
+          "tasks": [
+            {"id": 117, "name": "Pricing & Packaging Strategy", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         }
       ]
@@ -212,70 +330,140 @@
     {
       "id": 6,
       "name": "Sales & Customer Success",
-      "totalTasks": 10,
+      "totalTasks": 34,
       "subcategories": [
         {
-          "id": 17,
+          "id": 22,
           "name": "Sales Process",
           "tasks": [
-            {"id": 79, "name": "Sales Funnel Design", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 80, "name": "CRM System & Management", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 81, "name": "Lead Generation Process", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 82, "name": "Sales Training", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 83, "name": "Sales Scripts", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 118, "name": "Sales Organization", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": [
+              {"id": 1039, "name": "Hiring Roadmap", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1040, "name": "Compensation & Incentives", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []},
+              {"id": 1041, "name": "Coaching", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "tags": []}
+            ]},
+            {"id": 119, "name": "Sales Training", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 120, "name": "Sales Playbook", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 121, "name": "Funnel Stages", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 122, "name": "Lead Generation Process", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 123, "name": "Lead Qualification Criteria", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 124, "name": "Pipeline Qualification Criteria", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 125, "name": "Closing Process", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 126, "name": "Sales Scripts", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 127, "name": "CRM Setup", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 128, "name": "Lead Management", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 129, "name": "Pipeline Management", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 130, "name": "Reporting & Dashboards", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
-          "id": 18,
+          "id": 23,
+          "name": "Sales Enablement",
+          "tasks": [
+            {"id": 131, "name": "Pitch Deck", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 132, "name": "Battle Cards", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 133, "name": "Prospecting Templates", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 134, "name": "ROI Methodology", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 135, "name": "Objection Handling", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 136, "name": "Product Brochure", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 137, "name": "Services Overview", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 138, "name": "Analyst Relations", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
+          ]
+        },
+        {
+          "id": 24,
           "name": "Customer Success",
           "tasks": [
-            {"id": 84, "name": "Customer Support System Setup", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 85, "name": "Trackable KPIs", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 86, "name": "Feedback Collection", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 87, "name": "Upsell Strategy", "status": "pending", "priority": "low", "assignee": null},
-            {"id": 88, "name": "Knowledge Base Creation", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 139, "name": "Customer Journey Map", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 140, "name": "Onboarding Process", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 141, "name": "Feedback Loops", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 142, "name": "Expansion Playbook", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 143, "name": "Churn Mitigation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 144, "name": "Customer Support System Setup", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 145, "name": "Trackable KPIs", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 146, "name": "Knowledge Base Creation", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         }
       ]
     },
     {
       "id": 7,
+      "name": "Operating Cadence",
+      "totalTasks": 5,
+      "subcategories": [
+        {
+          "id": 25,
+          "name": "Weekly",
+          "tasks": [
+            {"id": 147, "name": "Revenue Standup (30-min)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 148, "name": "Pipeline Review (1-hr)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
+          ]
+        },
+        {
+          "id": 26,
+          "name": "Bi-weekly",
+          "tasks": [
+            {"id": 149, "name": "Marketing Sprint Review (1-hr)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
+          ]
+        },
+        {
+          "id": 27,
+          "name": "Monthly",
+          "tasks": [
+            {"id": 150, "name": "Revenue Council (90-min)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
+          ]
+        },
+        {
+          "id": 28,
+          "name": "Quarterly",
+          "tasks": [
+            {"id": 151, "name": "Strategic GTM Review (2-hrs)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8,
       "name": "Fundraising",
       "totalTasks": 5,
       "subcategories": [
         {
-          "id": 19,
+          "id": 29,
           "name": "Preparation",
           "tasks": [
-            {"id": 89, "name": "Pitch Deck", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 90, "name": "Data Room", "status": "pending", "priority": "high", "assignee": null},
-            {"id": 91, "name": "Key Metrics (avoiding vanity metrics)", "status": "pending", "priority": "high", "assignee": null}
+            {"id": 152, "name": "Pitch Deck", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 153, "name": "Data Room", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 154, "name": "Key Metrics (avoiding vanity metrics)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         },
         {
-          "id": 20,
+          "id": 30,
           "name": "Execution",
           "tasks": [
-            {"id": 92, "name": "Term Sheet", "status": "pending", "priority": "medium", "assignee": null},
-            {"id": 93, "name": "Investor Network (Strategic & Financial)", "status": "pending", "priority": "medium", "assignee": null}
+            {"id": 155, "name": "Term Sheet", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []},
+            {"id": 156, "name": "Investor Network (Strategic & Financial)", "status": "pending", "priority": "medium", "assignee": null, "dueDate": null, "subtasks": []}
           ]
         }
       ]
     }
   ],
   "summary": {
-    "totalTasks": 93,
-    "totalCategories": 7,
-    "totalSubcategories": 20,
+    "totalTasks": 190,
+    "totalCategories": 8,
+    "totalSubcategories": 30,
+    "totalItems": 231,
     "statusCounts": {
-      "pending": 79,
-      "in_progress": 6,
-      "completed": 8
+      "pending": 190,
+      "in_progress": 0,
+      "completed": 0
     },
     "priorityCounts": {
-      "high": 42,
-      "medium": 35,
-      "low": 16
+      "high": 0,
+      "medium": 190,
+      "low": 0
+    },
+    "itemCounts": {
+      "tasks": 156,
+      "subtasks": 41
     }
   }
 }

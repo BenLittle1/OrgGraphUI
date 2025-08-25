@@ -18,7 +18,7 @@ import { format, isValid, parseISO, differenceInDays } from "date-fns"
 import Link from "next/link"
 
 export function DataTable() {
-  const { getUpcomingTasksByDueDate, updateTaskStatus } = useData()
+  const { getUpcomingTasksByDueDate, updateTaskStatus, getTaskCompletion } = useData()
   
   // Get first 15 upcoming tasks by due date for dashboard display
   const upcomingTasks = getUpcomingTasksByDueDate(15)
@@ -139,6 +139,7 @@ export function DataTable() {
                 <TableRow>
                   <TableHead className="w-12">Done</TableHead>
                   <TableHead>Task</TableHead>
+                  <TableHead>Subtasks</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Subcategory</TableHead>
                   <TableHead>Due Date</TableHead>
@@ -159,12 +160,28 @@ export function DataTable() {
                     >
                       <TableCell>
                         <Checkbox
-                          checked={task.status === "completed"}
+                          checked={getTaskCompletion(task.id) === 100}
                           onCheckedChange={(checked) => handleTaskComplete(task.id, checked as boolean)}
+                          disabled={task.subtasks.length > 0}
+                          title={task.subtasks.length > 0 ? "Complete subtasks to mark task as done" : ""}
                         />
                       </TableCell>
                       <TableCell className={`font-medium ${task.status === "completed" ? "line-through text-muted-foreground" : ""}`}>
                         {task.name}
+                      </TableCell>
+                      <TableCell>
+                        {task.subtasks.length > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                              {task.subtasks.filter(st => st.status === 'completed').length}/{task.subtasks.length}
+                            </Badge>
+                            {getTaskCompletion(task.id) === 100 && (
+                              <CheckSquare className="h-3 w-3 text-green-600" />
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">None</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{task.category}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{task.subcategory}</TableCell>
