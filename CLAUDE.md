@@ -2,15 +2,17 @@
 
 ## Project Overview
 
-CodeAid is a business process checklist dashboard built with Next.js 14, TypeScript, and shadcn/ui. Displays 113+ business processes and subtasks across 7 categories with real-time statistics, interactive visualizations, and collaborative task management.
+WarpDrive is a business process checklist dashboard built with Next.js 14, TypeScript, and shadcn/ui. Displays 113+ business processes and subtasks across 7 categories with real-time statistics, interactive visualizations, and collaborative task management.
 
 **Core Features:**
+- **Organizations**: Multi-organization management page with card layout, filtering, and organization creation (primary entry point)
 - **Overview**: Summary cards, progress charts, high-priority task/subtask table, upcoming items
 - **Checklist**: Filterable task/subtask management with nested displays, status updates, assignment, due dates, item creation
 - **My Tasks**: Personal view with mixed task/subtask items, due date prioritization, smart grouping (overdue, today, this week, future)
 - **Graph**: D3.js force-directed visualization with 5-level hierarchy (Root→Category→Subcategory→Task→Subtask)
 - **Team**: Full CRUD team management, progress tracking with subtask support, horizontal three-dot menus
 - **Calendar**: Monthly view with task/subtask events, advanced filtering, item editing
+- **Authentication**: Placeholder signin/signup/forgot-password pages for future user management
 - **Subtasks**: Granular task breakdown with full CRUD, due dates, assignments, tags, progress tracking
 - **5-Level Hierarchy**: Root → Category → Subcategory → Task → **Subtask** with visual hierarchy
 - **Mixed Displays**: Tasks and subtasks appear together in My Tasks and Calendar views with parent-child context
@@ -29,14 +31,18 @@ CodeAid is a business process checklist dashboard built with Next.js 14, TypeScr
 
 ```
 ├── app/                          # Next.js 14 app directory
+│   ├── organizations/page.tsx   # Organization management (primary entry point)
 │   ├── calendar/page.tsx        # Calendar view
 │   ├── checklist/page.tsx       # Checklist view
 │   ├── my-tasks/page.tsx        # Personal task view
 │   ├── graph/page.tsx           # Graph visualization
 │   ├── team/page.tsx            # Team management
+│   ├── signin/page.tsx          # User authentication signin page
+│   ├── signup/page.tsx          # User registration page
+│   ├── forgot-password/page.tsx # Password reset page
 │   ├── globals.css              # CSS variables, theme tokens
 │   ├── layout.tsx               # Root layout with DataProvider
-│   └── page.tsx                 # Overview/Dashboard
+│   └── page.tsx                 # Root redirect to organizations
 ├── components/                   # React components
 │   ├── ui/                      # shadcn/ui base components
 │   ├── task-item.tsx            # Individual task component with subtask support
@@ -46,10 +52,13 @@ CodeAid is a business process checklist dashboard built with Next.js 14, TypeScr
 │   ├── date-picker.tsx          # Due date picker with indicators
 │   ├── add-task-dialog.tsx      # Task creation with validation
 │   ├── add-subtask-dialog.tsx   # Subtask creation with parent context
+│   ├── organization-card.tsx    # Individual organization card component
+│   ├── add-organization-dialog.tsx # Organization creation dialog
 │   ├── graph-visualization.tsx  # D3.js force-directed graph (5-level hierarchy)
 │   └── [other components...]
 ├── contexts/data-context.tsx    # Unified reactive state management
 ├── data/team-data.ts           # Team member data
+├── data/organization-data.ts   # Organization data and interfaces
 ├── lib/[graph-data.ts, utils.ts] # Utilities
 └── data.json                   # Business process data
 ```
@@ -66,6 +75,7 @@ CodeAid is a business process checklist dashboard built with Next.js 14, TypeScr
 **Unified State Management:** All views share single reactive data source via `DataContext` (`contexts/data-context.tsx`). DataProvider wraps app in `layout.tsx`, all views use `useData()` hook. Cross-view reactivity ensures task changes instantly update all views (statistics, UI, graph colors, progress, calendar events).
 
 **Data Sources:**
+- **Organization Data** (`data/organization-data.ts`): Sample organizations with card-based management, filtering, search, and creation capabilities. Industries include Technology, Healthcare, Finance, etc.
 - **Business Process Data** (`data.json`): 7 categories, 20+ subcategories, 94+ tasks with 19+ subtasks (113+ total items) with status/priority/assignee/tags. Dynamic task/subtask creation with auto ID generation.
 - **Team Data** (`data/team-data.ts`): 3 members - Majeed Kazemi (CEO), Ali Shabani (Senior Engineer), Jack Fan (Engineer). Executive/Engineering departments. Progress calculations include subtask completion.
 
@@ -91,6 +101,11 @@ interface ChecklistData {
     priorityCounts: { high: number; medium: number; low: number }
     itemCounts: { tasks: number; subtasks: number } }
 }
+interface Organization {
+  id: string; name: string; description: string; industry: string
+  plan: "Free" | "Pro" | "Enterprise"; memberCount: number; createdAt: string
+  location: string; website: string; logoUrl: string | null; isActive: boolean
+}
 interface TeamMember {
   id: string; name: string; email: string; role: string; department: string
   hireDate: string; avatarUrl: string | null; isActive: boolean; bio?: string
@@ -110,6 +125,8 @@ interface GraphNode extends d3.SimulationNodeDatum {
 - `DatePicker` - Due date picker with visual indicators (overdue, due today, etc.)
 - `AddTaskDialog` / `AddSubtaskDialog` - Task/subtask creation with dynamic category creation
 - `CategoryCombobox` / `SubcategoryCombobox` - Dynamic creation using Command component
+- `OrganizationCard` - Individual organization display with actions and status
+- `AddOrganizationDialog` - Organization creation dialog with form validation
 - `GraphVisualization` - D3.js force-directed graph with 5-level hierarchy
 - `CalendarView` - Monthly calendar grid with task/subtask events
 - `DataTable` - High-priority task/subtask table with sorting/filtering
@@ -160,6 +177,15 @@ interface GraphNode extends d3.SimulationNodeDatum {
 
 ## View-Specific Systems
 
+**Organizations View:**
+- Card-based layout with responsive grid (1-4 columns based on screen size)
+- Statistics cards showing total organizations, members, enterprise plans, and industries
+- Search functionality with real-time filtering
+- Industry and plan-based filtering with filter indicators
+- "Add New Organization" dialog with comprehensive form validation
+- Empty state handling with appropriate messaging
+- Action dropdown menus for each organization card
+
 **Calendar View:**
 - 7-column monthly grid using date-fns
 - Up to 3 visible task/subtask items/day with "+X more" overflow
@@ -209,8 +235,10 @@ Examples: `import { Button } from "@/components/ui/button"`
 - **Root (0)** → **Category (1)** → **Subcategory (2)** → **Task (3)** → **Subtask (4)**
 
 **Key Configuration:**
-- Distance: Category→Subcategory: 65, Subcategory→Task: 40, Task→Subtask: 25
+- Distance: Category→Subcategory: 10, Subcategory→Task: 40, Task→Subtask: 25
 - Categories positioned in radial pattern around center (400px radius)
+- Fixed node sizes by level (no weight-based sizing)
+- Reduced collision radii for tight clustering (Category: 8px, Subcategory: 6px)
 - Node colors update with task/subtask status changes
 - ~141 total nodes with subtasks
 

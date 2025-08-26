@@ -106,32 +106,17 @@ function calculateTaskCompletion(tasks: Task[]): number {
   return totalCompletion / tasks.length;
 }
 
-// Calculate weight based on task count and priority distribution
-function calculateWeight(
-  taskCount: number, 
-  tasks?: Task[] | Subtask[], 
-  level: number = 1
-): number {
-  const baseWeight = Math.max(1, taskCount);
-  
-  if (!tasks || tasks.length === 0) {
-    return baseWeight;
+// Simple weight calculation - fixed value per level
+function calculateWeight(level: number = 1): number {
+  // Fixed weights by level for consistent sizing
+  switch (level) {
+    case 0: return 16; // Root
+    case 1: return 12; // Category
+    case 2: return 8;  // Subcategory
+    case 3: return 6;  // Task
+    case 4: return 4;  // Subtask
+    default: return 6;
   }
-  
-  // Priority multiplier: high = 1.5, medium = 1.2, low = 1.0
-  const priorityMultiplier = tasks.reduce((sum, task) => {
-    switch (task.priority.toLowerCase()) {
-      case "high": return sum + 1.5;
-      case "medium": return sum + 1.2;
-      case "low": return sum + 1.0;
-      default: return sum + 1.0;
-    }
-  }, 0) / tasks.length;
-  
-  // Level multiplier: higher level = more important
-  const levelMultiplier = Math.max(1, 5 - level);
-  
-  return baseWeight * priorityMultiplier * levelMultiplier;
 }
 
 // Get all tasks from a category (flattened)
@@ -152,7 +137,7 @@ export function convertToGraphData(data: BusinessProcessData): GraphData {
     name: "CodeAid Business Processes",
     level: 0,
     completion: data.summary.statusCounts.completed / data.summary.totalTasks,
-    weight: calculateWeight(data.summary.totalTasks, [], 0),
+    weight: calculateWeight(0),
     isLeaf: false,
     originalNode: data.summary,
   };
@@ -168,7 +153,7 @@ export function convertToGraphData(data: BusinessProcessData): GraphData {
       name: category.name,
       level: 1,
       completion: categoryCompletion,
-      weight: calculateWeight(category.totalTasks, categoryTasks, 1),
+      weight: calculateWeight(1),
       isLeaf: false,
       originalNode: category,
     };
@@ -190,7 +175,7 @@ export function convertToGraphData(data: BusinessProcessData): GraphData {
         name: subcategory.name,
         level: 2,
         completion: subcategoryCompletion,
-        weight: calculateWeight(subcategory.tasks.length, subcategory.tasks, 2),
+        weight: calculateWeight(2),
         isLeaf: subcategory.tasks.length === 0,
         originalNode: subcategory,
       };
@@ -221,7 +206,7 @@ export function convertToGraphData(data: BusinessProcessData): GraphData {
           name: task.name,
           level: 3,
           completion: taskCompletion,
-          weight: calculateWeight(1, [task], 3),
+          weight: calculateWeight(3),
           isLeaf: !task.subtasks || task.subtasks.length === 0,
           originalNode: task,
         };
@@ -245,7 +230,7 @@ export function convertToGraphData(data: BusinessProcessData): GraphData {
               name: subtask.name,
               level: 4,
               completion: subtaskCompletion,
-              weight: calculateWeight(1, [subtask], 4),
+              weight: calculateWeight(4),
               isLeaf: true,
               originalNode: subtask,
             };
@@ -285,20 +270,26 @@ export function getCompletionColor(percentage: number): string {
   return `hsl(${hue}, 70%, ${lightness}%)`;
 }
 
-// Helper function to calculate node radius
+// Helper function to calculate node radius - fixed sizes by level
 export function getNodeRadius(node: GraphNode): number {
-  // Smaller radius for subtasks (level 4)
-  if (node.level === 4) {
-    return Math.max(8, Math.sqrt(node.weight) * 4);
+  switch (node.level) {
+    case 0: return 20; // Root
+    case 1: return 16; // Category
+    case 2: return 12; // Subcategory
+    case 3: return 10; // Task
+    case 4: return 8;  // Subtask
+    default: return 10;
   }
-  return Math.max(12, Math.sqrt(node.weight) * 6);
 }
 
-// Helper function to calculate collision radius (slightly larger than visual)
+// Helper function to calculate collision radius - fixed sizes by level
 export function getCollisionRadius(node: GraphNode): number {
-  // Smaller collision radius for subtasks (level 4)
-  if (node.level === 4) {
-    return Math.max(12, Math.sqrt(node.weight) * 4 + 3);
+  switch (node.level) {
+    case 0: return 25; // Root
+    case 1: return 12; // Category - moderate for balanced clustering
+    case 2: return 10; // Subcategory - moderate for balanced clustering  
+    case 3: return 14; // Task
+    case 4: return 12; // Subtask
+    default: return 14;
   }
-  return Math.max(15, Math.sqrt(node.weight) * 6 + 4);
 }

@@ -213,8 +213,8 @@ export default function GraphVisualization({
   const renderNodeLabels = useCallback((nodeSelection: d3.Selection<SVGGElement, GraphNode, SVGGElement, unknown>) => {
     nodeSelection.each(function(d) {
       const nodeGroup = d3.select(this)
-      const radius = d.level === 4 ? Math.max(6, Math.sqrt(d.weight) * 3) : Math.max(12, Math.sqrt(d.weight) * 6)
-      const fontSize = Math.max(9, 14 - d.level * 1.5) * Math.min(1.2, Math.sqrt(d.weight) / 4)
+      const radius = getNodeRadius(d)
+      const fontSize = Math.max(9, 14 - d.level * 1.5)
       
       // Word wrapping algorithm - exact from guide
       const words = d.name.split(/\s+/)
@@ -324,7 +324,7 @@ export default function GraphVisualization({
           
           // Tight clustering distances
           if ((source.level === 1 && target.level === 2) || (source.level === 2 && target.level === 1)) {
-            return 65 // Category to subcategory - tight clustering
+            return 20 // Category to subcategory - moderate tight clustering
           }
           if ((source.level === 2 && target.level === 3) || (source.level === 3 && target.level === 2)) {
             return 40 // Subcategory to task - tight clustering
@@ -340,11 +340,13 @@ export default function GraphVisualization({
           return 80 + (source.level + target.level) * 20
         })
         .strength(d => {
-          // Weaker link strength for root-to-category connections to allow better spreading
           const source = d.source as GraphNode
           const target = d.target as GraphNode
           if ((source.level === 0 && target.level === 1) || (source.level === 1 && target.level === 0)) {
             return 0.2 // Much weaker links from center to categories
+          }
+          if ((source.level === 1 && target.level === 2) || (source.level === 2 && target.level === 1)) {
+            return 1.2 // Moderately strong links for category-subcategory clustering
           }
           return 0.8 // Normal strength for other links
         })
@@ -354,35 +356,20 @@ export default function GraphVisualization({
           const node = d as GraphNode
           const baseStrength = -400
           
-          // Extremely strong repulsion for category nodes (level 1) to spread them around the radial constraint
-          if (node.level === 1) {
-            // All category nodes get extremely strong repulsion to spread out around the circle
-            const levelMultiplier = Math.max(1, 3 - node.level) // = 2 for level 1
-            return baseStrength * levelMultiplier * 30 // Extremely strong repulsion for maximum separation
+          // Balanced repulsion - allow tight clustering while maintaining separation
+          switch (node.level) {
+            case 0: return baseStrength * 4    // Root - strong repulsion
+            case 1: return baseStrength * 8    // Category - strong for separation around circle
+            case 2: return baseStrength * 1    // Subcategory - very weak to cluster near categories
+            case 3: return baseStrength * 2    // Task - moderate
+            case 4: return baseStrength * 1    // Subtask - minimal
+            default: return baseStrength * 2
           }
-          
-          // For level 4 (subtasks), use lighter repulsion to cluster near parent tasks
-          if (node.level === 4) {
-            const levelMultiplier = 1 // Minimal repulsion for subtasks
-            const weightMultiplier = Math.sqrt(node.weight) * 0.5 // Even lighter weight factor
-            return baseStrength * levelMultiplier * weightMultiplier
-          }
-          
-          // Keep weight-based repulsion for other levels (subcategories and tasks)
-          const levelMultiplier = Math.max(1, 3 - node.level)
-          const weightMultiplier = Math.sqrt(node.weight)
-          return baseStrength * levelMultiplier * weightMultiplier
         })
       )
       .force('center', d3.forceCenter(w / 2, h / 2))
       .force('collision', d3.forceCollide()
-        .radius(d => {
-          const node = d as GraphNode
-          if (node.level === 4) {
-            return Math.max(8, Math.sqrt(node.weight) * 3 + 2) // Smaller collision for subtasks
-          }
-          return Math.max(15, Math.sqrt(node.weight) * 6 + 4) // Existing logic
-        })
+        .radius(d => getCollisionRadius(d as GraphNode))
         .strength(0.8)
       )
       .force('radial', d3.forceRadial(d => {
@@ -431,12 +418,7 @@ export default function GraphVisualization({
 
     // Add circles - exact from guide
     nodeSelection.append('circle')
-      .attr('r', d => {
-        if (d.level === 4) {
-          return Math.max(6, Math.sqrt(d.weight) * 3) // Smaller subtask nodes
-        }
-        return Math.max(12, Math.sqrt(d.weight) * 6) // Existing logic
-      })
+      .attr('r', d => getNodeRadius(d))
       .attr('fill', d => getCompletionColor(d.completion))
       .attr('stroke', 'hsl(var(--background))')
       .attr('stroke-width', 1.5)
@@ -471,9 +453,7 @@ export default function GraphVisualization({
         d3.select(this).select('circle')
           .transition()
           .duration(200)
-          .attr('r', d.level === 4 ? 
-            Math.max(8, Math.sqrt(d.weight) * 3 + 2) :  // Smaller hover for subtasks
-            Math.max(15, Math.sqrt(d.weight) * 6 + 3))   // Existing logic
+          .attr('r', getNodeRadius(d) + 2) // Fixed +2px enlargement
           .attr('opacity', 1)
 
         // Show tooltip
@@ -484,9 +464,7 @@ export default function GraphVisualization({
         d3.select(this).select('circle')
           .transition() 
           .duration(200)
-          .attr('r', d.level === 4 ?
-            Math.max(6, Math.sqrt(d.weight) * 3) :       // Restore subtask size
-            Math.max(12, Math.sqrt(d.weight) * 6))       // Existing logic
+          .attr('r', getNodeRadius(d)) // Restore to fixed size
           .attr('opacity', 0.9)
 
         // Hide tooltip
