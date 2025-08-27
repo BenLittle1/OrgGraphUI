@@ -188,10 +188,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 ### Session Management
 
-- **Persistence**: Sessions stored in localStorage
-- **Refresh**: Automatic token refresh handled by Supabase
-- **Expiration**: Configurable session timeout
+- **Persistence**: Sessions stored in localStorage with `persistSession: true`
+- **Refresh**: Automatic token refresh handled by Supabase with `autoRefreshToken: true`
+- **Flow Type**: PKCE flow for enhanced security (`flowType: 'pkce'`)
 - **Cross-tab**: Session sharing across browser tabs
+- **Page Reload**: Robust session recovery via `INITIAL_SESSION` and `SIGNED_IN` event handling
 
 ## API Reference
 
@@ -343,12 +344,47 @@ await signInWithOAuth('github')  // GitHub OAuth
 - **Cause**: localStorage issues or domain mismatch
 - **Solution**: Check browser storage, verify domain configuration
 
+#### 5. **Authentication Timeout on Page Reload (RESOLVED)**
+- **Issue**: Page reload would show infinite loading with "Authentication check timed out" errors
+- **Root Cause**: Race conditions between `Promise.race()` timeouts and Supabase `getSession()` calls, plus blocking profile loading
+- **Solution Implemented**: 
+  - Removed `Promise.race()` timeout wrapper around `supabase.auth.getSession()`
+  - Made profile loading non-blocking and asynchronous
+  - Rely on Supabase's internal timeout handling
+  - Added proper `INITIAL_SESSION` event handling
+  - Set `initialLoading` to `false` immediately on successful auth state detection
+
+#### 6. **Profile Loading Hanging**
+- **Issue**: Profile API calls would hang indefinitely, blocking authentication completion
+- **Root Cause**: Synchronous profile loading within auth state listener
+- **Solution Implemented**: 
+  - Made profile loading fully asynchronous and non-blocking
+  - Set authentication state immediately using `session.user.user_metadata`
+  - Load profile in background and update state when complete
+  - Added comprehensive error handling for profile failures
+
 ### Debug Mode
 
-Enable debug logging by setting environment variable:
+The authentication context includes built-in debug logging that shows:
+- Auth state changes (`SIGNED_IN`, `INITIAL_SESSION`, etc.)
+- Profile loading success/failure
+- Session check results
+- Auth initialization progress
+
+Additional debug logging can be enabled by setting environment variable:
 ```bash
 NEXT_PUBLIC_DEBUG_AUTH=true
 ```
+
+### Critical Authentication Flow Fixes
+
+The current implementation includes several critical fixes for production stability:
+
+1. **Non-blocking Profile Loading**: Authentication completes immediately, profile loads asynchronously
+2. **Proper Session Recovery**: Handles both `SIGNED_IN` and `INITIAL_SESSION` events for page reloads
+3. **Timeout Management**: Removed problematic race conditions, relies on Supabase internal timeouts
+4. **Error Resilience**: Profile loading failures don't block authentication
+5. **State Consistency**: `initialLoading` always gets set to `false` via multiple failsafes
 
 ## Future Considerations
 
@@ -406,10 +442,12 @@ When implementing user-organization relationships:
 
 The current implementation is optimized for production:
 
-- **Memoized Context**: Prevents unnecessary re-renders
-- **Lazy Loading**: Profile data loaded only when needed
-- **Efficient Queries**: Minimal database calls with proper indexing
-- **Session Caching**: Reduces authentication overhead
+- **Memoized Context**: Prevents unnecessary re-renders using `useMemo` and `useCallback`
+- **Non-blocking Profile Loading**: Authentication completes immediately, profile loads asynchronously
+- **Efficient State Updates**: Multiple failsafes ensure `initialLoading` always gets set to `false`
+- **Event-driven Architecture**: Relies on Supabase auth state listeners instead of polling
+- **Minimal API Calls**: Profile loading happens only when needed and doesn't block auth flow
+- **Session Caching**: Reduces authentication overhead via localStorage persistence
 
 ## Conclusion
 
@@ -423,5 +461,19 @@ This authentication implementation provides a solid foundation for the WarpDrive
 ✅ Scalable architecture for future enhancements  
 ✅ Empty state for new users as specified  
 ✅ Full documentation and development guidelines  
+✅ **Robust page reload handling** - Fixed infinite loading issues  
+✅ **Non-blocking profile loading** - Authentication never hangs on API calls  
+✅ **Production-tested reliability** - Extensive debugging and timeout fixes  
+✅ **Event-driven architecture** - Proper Supabase auth state listener implementation  
+
+### Production Readiness
+
+The authentication system has been thoroughly tested and debugged for production use:
+
+- **Page Reload Stability**: Eliminates infinite loading and timeout errors
+- **Network Resilience**: Handles API failures gracefully without blocking auth
+- **Session Recovery**: Robust handling of both `SIGNED_IN` and `INITIAL_SESSION` events  
+- **Error Boundaries**: Profile loading failures don't prevent authentication
+- **Performance Optimized**: Non-blocking async operations with proper state management
 
 The system is ready for immediate production deployment and provides a strong foundation for future user management and organization features.

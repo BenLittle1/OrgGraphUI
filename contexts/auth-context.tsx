@@ -89,7 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       updateAuthState({ loading: true, error: null })
       
+      // Remove race condition - just use direct getSession call
+      // Supabase handles its own timeouts and retries internally
       const { data: { session }, error } = await supabase.auth.getSession()
+      
+      console.log("Session check result:", { session: !!session, error: !!error, userId: session?.user?.id })
       
       if (error) {
         console.error("Auth session error:", error)
@@ -107,8 +111,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (session?.user) {
-        // Load user profile
-        const profile = await loadUserProfile(session.user.id)
+        // Load user profile without race condition
+        let profile: any = null
+        try {
+          profile = await loadUserProfile(session.user.id)
+        } catch (profileError) {
+          console.warn("Profile loading failed, continuing without profile:", profileError)
+          // Continue without profile - don't block authentication
+        }
         
         const user: User = {
           ...session.user,
@@ -150,6 +160,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: false,
         isEmailConfirmed: false
       })
+    } finally {
+      // Ensure initialLoading is always set to false
+      updateAuthState(prev => ({ ...prev, loading: false, initialLoading: false }))
     }
   }, [handleAuthError, loadUserProfile, updateAuthState])
 
@@ -465,31 +478,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Set up auth state listener on mount
   useEffect(() => {
-    // Initial auth check
-    checkAuthState()
+    console.log("AuthProvider useEffect: Starting auth initialization")
+    
+    // Skip initial checkAuthState - let the auth state listener handle everything
+    // This avoids the hanging getSession() issue
+
+    // Failsafe timeout to prevent infinite loading - reduced to 10 seconds
+    const failsafeTimeout = setTimeout(() => {
+      setAuthState(prev => {
+        if (prev.initialLoading) {
+          console.warn("Authentication check timed out, proceeding as unauthenticated")
+          return {
+            ...prev,
+            loading: false,
+            initialLoading: false,
+            error: null, // Don't show error for timeout, just proceed
+            isAuthenticated: false,
+            isEmailConfirmed: false
+          }
+        }
+        return prev
+      })
+    }, 10000) // 10 seconds absolute timeout
 
     // Listen for auth state changes
     const { data: { subscription } } = onAuthStateChange(async (event, session) => {
       console.log("Auth state change:", event, session?.user?.id)
+      
+      // Clear failsafe timeout since we got a response
+      clearTimeout(failsafeTimeout)
 
       if (event === 'SIGNED_IN' && session?.user) {
-        const profile = await loadUserProfile(session.user.id)
+        console.log("Processing SIGNED_IN event for user:", session.user.id)
         
+        // Set auth state immediately without waiting for profile
         const user: User = {
           ...session.user,
-          full_name: profile?.full_name,
-          profile
+          full_name: session.user.user_metadata?.full_name,
+          profile: null // Will be loaded asynchronously
         }
 
+        console.log("Setting auth state to authenticated for SIGNED_IN")
         updateAuthState({
           user,
           session,
-          profile,
+          profile: null,
           loading: false,
           initialLoading: false,
           error: null,
           isAuthenticated: true,
           isEmailConfirmed: session.user.email_confirmed_at != null
+        })
+
+        // Load profile asynchronously without blocking auth
+        loadUserProfile(session.user.id).then(profile => {
+          if (profile) {
+            console.log("Profile loaded, updating user data")
+            const updatedUser: User = {
+              ...session.user,
+              full_name: profile.full_name,
+              profile
+            }
+            updateAuthState(prev => ({ ...prev, user: updatedUser, profile }))
+          }
+        }).catch(error => {
+          console.warn("Profile loading failed during auth state change:", error)
         })
       } else if (event === 'SIGNED_OUT') {
         updateAuthState({
@@ -508,7 +561,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           error: null
         })
       } else if (event === 'USER_UPDATED' && session?.user) {
-        const profile = await loadUserProfile(session.user.id)
+        let profile: any = null
+        try {
+          profile = await loadUserProfile(session.user.id)
+        } catch (error) {
+          console.warn("Profile loading failed during user update:", error)
+        }
         
         const user: User = {
           ...session.user,
@@ -522,10 +580,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profile,
           error: null
         })
+      } else if (event === 'INITIAL_SESSION' && session?.user) {
+        // Handle initial session - this is key for page reload!
+        console.log("Initial session found:", session.user.id)
+        let profile: any = null
+        try {
+          profile = await loadUserProfile(session.user.id)
+        } catch (error) {
+          console.warn("Profile loading failed during initial session:", error)
+        }
+        
+        const user: User = {
+          ...session.user,
+          full_name: profile?.full_name,
+          profile
+        }
+
+        updateAuthState({
+          user,
+          session,
+          profile,
+          loading: false,
+          initialLoading: false,
+          error: null,
+          isAuthenticated: true,
+          isEmailConfirmed: session.user.email_confirmed_at != null
+        })
+      } else if (event === 'INITIAL_SESSION' && !session) {
+        // No session found on page load
+        console.log("No initial session found")
+        updateAuthState({
+          user: null,
+          session: null,
+          profile: null,
+          loading: false,
+          initialLoading: false,
+          error: null,
+          isAuthenticated: false,
+          isEmailConfirmed: false
+        })
       }
     })
 
     return () => {
+      clearTimeout(failsafeTimeout)
       subscription.unsubscribe()
     }
   }, [checkAuthState, loadUserProfile, updateAuthState])
