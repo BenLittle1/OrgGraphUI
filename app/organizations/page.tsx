@@ -6,14 +6,20 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { AuthGuard } from "@/components/auth-guard"
 import { OrganizationCard } from "@/components/organization-card"
 import { AddOrganizationDialog } from "@/components/add-organization-dialog"
 import { ModeToggle } from "@/components/mode-toggle"
+import { useAuth } from "@/contexts/auth-context"
 import { Organization, organizationData } from "@/data/organization-data"
-import { Building2, Search, Filter, TrendingUp, Plus, Users, Calendar } from "lucide-react"
+import { Building2, Search, Filter, TrendingUp, Plus, Users, Calendar, User, LogOut } from "lucide-react"
 
-export default function OrganizationsPage() {
-  const [organizations, setOrganizations] = useState(organizationData.organizations)
+function OrganizationsPageContent() {
+  const { user, profile, signOut } = useAuth()
+  // New users start with empty organizations - no seeded data
+  const [organizations, setOrganizations] = useState<Organization[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIndustry, setSelectedIndustry] = useState<string>("all")
   const [selectedPlan, setSelectedPlan] = useState<string>("all")
@@ -106,6 +112,44 @@ export default function OrganizationsPage() {
                   Add New Organization
                 </Button>
               </AddOrganizationDialog>
+              
+              {/* User Profile Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {profile?.full_name ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : user?.email?.[0]?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {profile?.full_name || 'User'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-red-600 focus:text-red-600" 
+                    onClick={() => signOut()}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -278,5 +322,13 @@ export default function OrganizationsPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function OrganizationsPage() {
+  return (
+    <AuthGuard>
+      <OrganizationsPageContent />
+    </AuthGuard>
   )
 }

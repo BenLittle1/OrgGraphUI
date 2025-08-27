@@ -1,11 +1,12 @@
 import type { Metadata } from "next"
 import "./globals.css"
+import { AuthProvider } from "@/contexts/auth-context"
 import { DataProvider } from "@/contexts/data-context"
 import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
-  title: "CodeAid Dashboard",
-  description: "A bare bones dashboard based on shadcn dashboard-01",
+  title: "WarpDrive - Business Process Management",
+  description: "Comprehensive business process checklist dashboard with team collaboration and analytics",
 }
 
 export default function RootLayout({
@@ -22,9 +23,11 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <DataProvider>
-            {children}
-          </DataProvider>
+          <AuthProvider>
+            <DataProvider>
+              {children}
+            </DataProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

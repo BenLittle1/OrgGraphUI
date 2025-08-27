@@ -2,34 +2,51 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ModeToggle } from "@/components/mode-toggle"
+import { GuestGuard } from "@/components/auth-guard"
+import { useAuth } from "@/contexts/auth-context"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle, Eye, EyeOff } from "lucide-react"
 
-export default function SignInPage() {
+function SignInPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { signIn, loading, error } = useAuth()
+  
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    
-    // Placeholder for future authentication logic
-    console.log("Sign in attempt:", { email, password })
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Redirect to organizations page after successful signin
-    router.push('/organizations')
-    
-    setIsLoading(false)
-    // TODO: Implement actual authentication
+    setFormError(null)
+
+    // Basic validation
+    if (!email.trim() || !password.trim()) {
+      setFormError("Please enter both email and password")
+      return
+    }
+
+    try {
+      const result = await signIn(email.trim(), password)
+      
+      if (result.success) {
+        // Get redirect destination from URL params or default to organizations
+        const redirectTo = searchParams.get('redirectTo') || '/organizations'
+        router.push(redirectTo)
+      } else {
+        setFormError(result.error || "Sign in failed. Please try again.")
+      }
+    } catch (err) {
+      setFormError("An unexpected error occurred. Please try again.")
+      console.error("Sign in error:", err)
+    }
   }
 
   return (
@@ -59,29 +76,53 @@ export default function SignInPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={loading}
               />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                  disabled={loading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
             
+            {(formError || error) && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {formError || error}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isLoading}
+              disabled={loading || !email.trim() || !password.trim()}
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
           
@@ -106,13 +147,16 @@ export default function SignInPage() {
             </p>
           </div>
           
-          <div className="mt-8 pt-6 border-t border-border">
-            <p className="text-xs text-center text-muted-foreground">
-              Placeholder signin page for future user management implementation
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <GuestGuard>
+      <SignInPageContent />
+    </GuestGuard>
   )
 }
