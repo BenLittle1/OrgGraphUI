@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
     } finally {
       // Ensure initialLoading is always set to false
-      updateAuthState(prev => ({ ...prev, loading: false, initialLoading: false }))
+      setAuthState((prev: AuthState) => ({ ...prev, loading: false, initialLoading: false }))
     }
   }, [handleAuthError, loadUserProfile, updateAuthState])
 
@@ -485,7 +485,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Failsafe timeout to prevent infinite loading - reduced to 10 seconds
     const failsafeTimeout = setTimeout(() => {
-      setAuthState(prev => {
+      setAuthState((prev: AuthState) => {
         if (prev.initialLoading) {
           console.warn("Authentication check timed out, proceeding as unauthenticated")
           return {
@@ -539,7 +539,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               full_name: profile.full_name,
               profile
             }
-            updateAuthState(prev => ({ ...prev, user: updatedUser, profile }))
+            setAuthState((prev: AuthState) => ({ ...prev, user: updatedUser, profile }))
           }
         }).catch(error => {
           console.warn("Profile loading failed during auth state change:", error)
